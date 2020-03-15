@@ -101,7 +101,11 @@ class Loggable(object):
 
 class PacketRingBuffer(object):
     # TODO: I think this is cleaner, but haven't tested yet.
-    BufferItem = namedtuple("BufferItem", ["empty", "packet"])
+    class BufferItem(object):
+        def __init__(self, empty, packet=None):
+            self.empty = empty
+            self.packet = packet
+
     def __init__(self):
         self.last_packet_index = 0
         self.buffer = deque()
@@ -111,8 +115,9 @@ class PacketRingBuffer(object):
             return None
         if self.buffer[0].empty:
             return None
-        self.last_packet_index = self.buffer[0].index_sending
-        return self.buffer.popleft()
+        packet = self.buffer.popleft().packet
+        self.last_packet_index = packet.index_sending
+        return packet
 
 
     def InsertPacket(self, packet):
@@ -120,17 +125,24 @@ class PacketRingBuffer(object):
             return None
         offset = packet.index_sending - self.last_packet_index
         if offset > 0:
-            self.AppendPacket(packet, offset)
+            self._AppendPacket(packet, offset)
         elif offset < -100 and offset > -127:
-            self.AppendPacket(packet, offset + 127)
+            self._AppendPacket(packet, offset + 127)
         else:
             # Bad, duplicate packet.
             pass
 
-    def AppendPacket(self, packet, offset):
-        for i in range(len(self.buffer), offset - 1):
-            self.buffer.append(BufferItem(empty=True))
-        self.buffer.append(BufferItem(empty=False, packet=packet))
+    def _AppendPacket(self, packet, offset):
+        insert_index = offset - 1
+        if insert_index < len(self.buffer):
+            item = self.buffer[insert_index]
+            if item.empty:
+                item.empty = False
+                item.packet = packet
+            return
+        for i in range(len(self.buffer), insert_index):
+            self.buffer.append(PacketRingBuffer.BufferItem(empty=True, packet=None))
+        self.buffer.append(PacketRingBuffer.BufferItem(empty=False, packet=packet))
 
 
 class Reader(Loggable):
@@ -138,13 +150,11 @@ class Reader(Loggable):
         Loggable.__init__(self, name)
         self.ser = ser
         self.bytes = []
-        self.packet_lists = [[], []]
         self.incoming_ok = Queue(10)
         self.incoming_error = Queue(10)
         self.outgoing_ok = Queue(10)
         self.outgoing_error = Queue(10)
-        self.last_packet_index = 0
-        self.padded_to_end = False
+        self.incoming_buffer = PacketRingBuffer()
 
     def Read(self, rx_queue):
         self.ReadIntoBuffer()
@@ -174,50 +184,13 @@ class Reader(Loggable):
         return len(self.bytes) == 0 and self.packet_lists == [[], []]
 
     def AppendPacket(self, packet):
-        if packet.index_sending == 0:
-            return None
-        offset = packet.index_sending - self.last_packet_index - 1
-        self.log("Offset = %d", offset)
-        if offset < -100:
-            packets = self.packet_lists[1]
-            offset = packet.index_sending - 1
-            if not self.padded_to_end:
-                for i in range(127 - self.last_packet_index):
-                    # avoids this will get hit many times and over-pad
-                    logging.info("Padding end of %s before wrapping for message %d.",
-                            self.packet_lists[0], packet.index_sending)
-                    self.packet_lists[0].append(None)
-                self.padded_to_end = True
-            logging.info("Wrap around to: %d", offset)
-        else:
-            packets = self.packet_lists[0]
-        if offset < 0:
-            # Duplicate packet.
-            return None
-        while offset >= len(packets):
-            packets.append(None)
-        packets[offset] = packet
-        returned = []
-        for i in range(2):
-            packets = self.packet_lists[0]
-            num_packets = len(packets)
-            self.log("%d packets in buffer", num_packets)
-            for j in range(num_packets):
-                p = packets[0]
-                if p is None:
-                    break
-                self.last_packet_index += 1
-                packets.pop(0)
-                returned.append(p)
-                self.log("return %d, packets[0] size = %d, packets[1] size = %d", p.index_sending, len(self.packet_lists[0]), len(self.packet_lists[1]))
-            if self.packet_lists[0] or not self.packet_lists[1]:
-                break
-            self.log("Flipping packet lists.")
-            self.packet_lists = [self.packet_lists[1], []]
-            self.padded_to_end = False
-            packets = self.packet_lists[0]
-            self.last_packet_index = 0
-        return returned
+        self.incoming_buffer.InsertPacket(packet)
+        returns = []
+        while True:
+            popped = self.incoming_buffer.PopPacket()
+            if not popped:
+                return returns
+            returns.append(popped)
 
     def PopIncomingError(self):
         """Errors in messages incoming to this device."""
