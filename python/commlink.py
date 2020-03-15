@@ -125,6 +125,7 @@ class PacketRingBuffer(object):
             self.AppendPacket(packet, offset + 127)
         else:
             # Bad, duplicate packet.
+            pass
 
     def AppendPacket(self, packet, offset):
         for i in range(len(self.buffer), offset - 1):
