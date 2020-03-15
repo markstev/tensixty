@@ -99,6 +99,39 @@ class Loggable(object):
         logging.info(*args_with_name)
 
 
+class PacketRingBuffer(object):
+    # TODO: I think this is cleaner, but haven't tested yet.
+    BufferItem = namedtuple("BufferItem", ["empty", "packet"])
+    def __init__(self):
+        self.last_packet_index = 0
+        self.buffer = deque()
+
+    def PopPacket(self):
+        if len(self.buffer) == 0:
+            return None
+        if self.buffer[0].empty:
+            return None
+        self.last_packet_index = self.buffer[0].index_sending
+        return self.buffer.popleft()
+
+
+    def InsertPacket(self, packet):
+        if packet.index_sending == 0:
+            return None
+        offset = packet.index_sending - self.last_packet_index
+        if offset > 0:
+            self.AppendPacket(packet, offset)
+        elif offset < -100 and offset > -127:
+            self.AppendPacket(packet, offset + 127)
+        else:
+            # Bad, duplicate packet.
+
+    def AppendPacket(self, packet, offset):
+        for i in range(len(self.buffer), offset - 1):
+            self.buffer.append(BufferItem(empty=True))
+        self.buffer.append(BufferItem(empty=False, packet=packet))
+
+
 class Reader(Loggable):
     def __init__(self, ser, name=""):
         Loggable.__init__(self, name)

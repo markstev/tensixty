@@ -28,8 +28,9 @@ class DoubleEndedFaultTest(unittest.TestCase):
         self.thread_a.start()
         self.thread_b.start()
         for i in range(2000):
-            self.thread_a.WriteMessage(ToInts('hello') + [i])
-            self.thread_b.WriteMessage(ToInts('world!') + [i])
+            imod = i % 256
+            self.thread_a.WriteMessage(ToInts('hello') + [imod])
+            self.thread_b.WriteMessage(ToInts('world!') + [imod])
             while not self.thread_a.done():
                 pass
             while not self.thread_b.done():
@@ -38,8 +39,8 @@ class DoubleEndedFaultTest(unittest.TestCase):
             a0 = self.thread_a.ReadMessage(0)
             b1 = self.thread_b.ReadMessage(0)
             a1 = self.thread_a.ReadMessage(0)
-            self.assertEqual(b0, ToInts('hello') + [i])
-            self.assertEqual(a0, ToInts('world!') + [i])
+            self.assertEqual(b0, ToInts('hello') + [imod])
+            self.assertEqual(a0, ToInts('world!') + [imod])
             self.assertEqual(None, b1)
             self.assertEqual(None, a1)
 
