@@ -1,0 +1,56 @@
+TenSixty is a communication protocol targeted at arduio-linux serial connections.
+
+It provids resilient, two-way communication over an unreliable connection,
+ensuring the following:
+- guaranteed packet delivery
+- in-order packet delivery
+
+|----------|       |----------|
+| Device A |       | Device B |
+|----------|       |----------|
+|          |       |          |
+|  Reader  | <---  |  Writer  |
+|          |       |          |
+|----------|       |----------|
+|          |       |          |
+|  Writer  | --->  |  Reader  |
+|          |       |          |
+|----------|       |----------|
+
+The protocol is loosely based on TCP, and involves sending packets between two
+devices. The layout of a packet mostly defines the protocol. There are a few
+concepts to note:
+
+1) Packets consist of a header and a data block.
+2) Each packet containing data has a transmission index, used to ensure ordered
+    delivery and no skipped packets. Indices range from 1-127; 0 is reserved to
+    mean "no data." The 128th packet will loop around and start again at 1.
+3) There is a limit on how many packets may be live at once, which is why the
+    indexing in #2 works -- it's always clear from local context what the next
+    indices are. This limit isn't fixed, but will typically be < 10, since
+    microcontrollers have limited memory to hold pending packets.
+4) If there's an error, and the reader got a valid header, the receiving device
+    will send back an error ack, which triggers a resend.
+5) A writer will also retry sending a packet if it gets a skipped ack. In other
+    words, N and N+2 are acked before N+1 means retransmit N+1.
+6) Finally, the writer will retry sending a packet if enough time has elapsed
+    without an ack. This handles lost headers in the absence of subsequent
+    packets.
+
+A packet consists of, in order:
+
+Header
+  - Two "start sequence" bytes, 10, followed by 60 (decimal). Hence the protocol
+    name. This simplifies implementations.
+  - One "ack" byte, consisting of a MSB, which indicates "error" if high and
+    "ok" if low. The remaining 7 bits encode a transmission index from 1 to 127.
+    If the index is zero, that means nothing is acked. Throughout
+  - One byte for the index currently being sent, or 0 for no data.
+  - One byte for the length of the data segment, meaning the data can be up to
+    256 bytes long.
+  - Two checksum bytes to verify integrity of the header. These are a fletcher
+    checksum of the previous five bytes.
+Data
+  - A length of N (up to 256) bytes being delivered.
+  - Two checksum bytes on the previous N data bytes (not header) to verify
+    integrity of the data block.
