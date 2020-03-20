@@ -6,160 +6,116 @@
 namespace tensixty {
 namespace {
 
-TEST(AckTest, SerializeDeserialize) {
-  Ack a;
-  EXPECT_EQ(a.index(), 0);
-  a.Parse(0x81);
-  EXPECT_EQ(a.index(), 1);
-  EXPECT_EQ(a.error(), true);
-  EXPECT_EQ(a.ok(), false);
-  a.Parse(0x71);
-  EXPECT_EQ(a.index(), 0x71);
-  EXPECT_EQ(a.error(), false);
-  EXPECT_EQ(a.ok(), true);
-  a.Parse(0xF1);
-  EXPECT_EQ(a.index(), 0x71);
-  EXPECT_EQ(a.error(), true);
-  EXPECT_EQ(a.ok(), false);
-
-  Ack b;
-  EXPECT_EQ(b.index(), 0);
-  b = a;
-  EXPECT_EQ(b.index(), 0x71);
-  EXPECT_EQ(b.error(), true);
-  EXPECT_EQ(b.ok(), false);
-  a.Parse(0x10);
-  EXPECT_EQ(b.index(), 0x71);
-  EXPECT_EQ(b.error(), true);
-  EXPECT_EQ(b.ok(), false);
-  EXPECT_EQ(a.index(), 0x10);
-  EXPECT_EQ(a.error(), false);
-  EXPECT_EQ(a.ok(), true);
-}
-
-TEST(PacketTest, ParseOkay) {
-  unsigned char header[7], data[15];
-  unsigned char data_bytes;
-  const unsigned char MESSAGE_SIZE = 4;
-  const unsigned char message_to_send[MESSAGE_SIZE] = {0x23, 0xFF, 0x01, 0x88};
-  {
-    Packet original;
-    original.IncludeAck(Ack(0xF1));
-    original.IncludeData(22, message_to_send, MESSAGE_SIZE);
-    EXPECT_EQ(original.ack().error(), true);
-    EXPECT_EQ(original.ack().index(), 0x71);
-    EXPECT_EQ(original.index_sending(), 22);
-    unsigned char length;
-    const unsigned char *contents = original.data(&length);
-    EXPECT_EQ(length, MESSAGE_SIZE);
-    for (int i = 0; i < length; ++i) {
-      EXPECT_EQ(contents[i], message_to_send[i]);
-    }
-
-    original.Serialize(header, data, &data_bytes);
-    EXPECT_EQ(data_bytes, MESSAGE_SIZE + 2);
-  }
-  {
-    Packet parsed;
-    for (int i = 0; i < 7; ++i) {
-      EXPECT_EQ(INCOMPLETE, parsed.ParseChar(header[i]));
-    }
-
-    EXPECT_EQ(parsed.ack().error(), true);
-    EXPECT_EQ(parsed.ack().index(), 0x71);
-    EXPECT_EQ(parsed.index_sending(), 22);
-
-    for (int i = 0; i < MESSAGE_SIZE + 1; ++i) {
-      EXPECT_EQ(INCOMPLETE, parsed.ParseChar(data[i]));
-    }
-    EXPECT_EQ(PARSED, parsed.ParseChar(data[MESSAGE_SIZE + 1]));
-    EXPECT_EQ(parsed.ack().error(), true);
-    EXPECT_EQ(parsed.ack().index(), 0x71);
-    EXPECT_EQ(parsed.index_sending(), 22);
-    unsigned char length;
-    const unsigned char *contents = parsed.data(&length);
-    EXPECT_EQ(length, MESSAGE_SIZE);
-    for (int i = 0; i < length; ++i) {
-      EXPECT_EQ(contents[i], message_to_send[i]);
-    }
-  }
-}
-
-TEST(PacketTest, ParseHeaderNotOkay) {
+void FillPacket(const Ack &ack, const unsigned char index, Packet *packet) {
+  Packet pt;
+  pt.IncludeAck(ack);
+  unsigned char data[1];
+  data[0] = index + 1;
+  pt.IncludeData(index, data, 1);
+  unsigned char header[7];
+  unsigned char contents[3];
+  unsigned char length;
+  pt.Serialize(header, contents, &length);
   for (int i = 0; i < 7; ++i) {
-    unsigned char header[7], data[15];
-    unsigned char data_bytes;
-    const unsigned char MESSAGE_SIZE = 4;
-    const unsigned char message_to_send[MESSAGE_SIZE] = {0x23, 0xFF, 0x01, 0x88};
-    {
-      Packet original;
-      original.IncludeAck(Ack(0xF1));
-      original.IncludeData(22, message_to_send, MESSAGE_SIZE);
-      unsigned char length;
-      original.data(&length);
-      original.Serialize(header, data, &data_bytes);
-    }
-    header[i] += 1;
-    {
-      Packet parsed;
-      if (i == 0) {
-        EXPECT_EQ(HEADER_ERROR, parsed.ParseChar(header[0]));
-        continue;
-      } else if (i == 1) {
-        EXPECT_EQ(INCOMPLETE, parsed.ParseChar(header[0]));
-        EXPECT_EQ(HEADER_ERROR, parsed.ParseChar(header[1]));
-        continue;
-      }
-      for (int j = 0; j < 5; ++j) {
-        EXPECT_EQ(INCOMPLETE, parsed.ParseChar(header[j]));
-      }
-      if (i != 6) {
-        EXPECT_EQ(HEADER_ERROR, parsed.ParseChar(header[5]));
-      } else {
-        EXPECT_EQ(INCOMPLETE, parsed.ParseChar(header[5]));
-        EXPECT_EQ(HEADER_ERROR, parsed.ParseChar(header[6]));
-      }
-    }
+    packet->ParseChar(header[i]);
+  }
+  for (int i = 0; i < length; ++i) {
+    packet->ParseChar(contents[i]);
+  }
+  EXPECT_TRUE(packet->parsed());
+}
+
+TEST(PacketRingBufferTest, AllocateMaxPackets) {
+  PacketRingBuffer rb;
+  for (int i = 0; i < 4; ++i) {
+    EXPECT_FALSE(rb.full());
+    Packet *p = rb.AllocatePacket();
+    ASSERT_NE(p, nullptr);
+    FillPacket(Ack(0x70), i + 1, p);
+  }
+  EXPECT_TRUE(rb.full());
+}
+
+TEST(PacketRingBufferTest, PopNextSeveral) {
+  PacketRingBuffer rb;
+  for (int i = 0; i < 4; ++i) {
+    EXPECT_FALSE(rb.full());
+    Packet *p = rb.AllocatePacket();
+    ASSERT_NE(p, nullptr);
+    FillPacket(Ack(0x70), i + 1, p);
+  }
+  EXPECT_TRUE(rb.full());
+  Packet *p = rb.PopPacket();
+  for (int i = 1; i < 2; ++i) {
+    ASSERT_NE(p, nullptr);
+    EXPECT_EQ(p->index_sending(), i);
+    unsigned char length;
+    EXPECT_EQ(p->data(&length)[0], i + 1);
+    EXPECT_EQ(length, 1);
   }
 }
 
-TEST(PacketTest, ParseDataNotOkay) {
-  static const unsigned int MESSAGE_SIZE = 255;
-  unsigned char message_to_send[MESSAGE_SIZE];
-  for (int i = 0; i < MESSAGE_SIZE; ++i) {
-    message_to_send[i] = i;
+unsigned char ToIndex(const int i) {
+  return i % 127 + 1;
+}
+
+TEST(PacketRingBufferTest, DropOutOfOrderTooLow) {
+  PacketRingBuffer rb;
+  for (int i = 0; i < 30; ++i) {
+    printf("Trial %d\n", i);
+    EXPECT_FALSE(rb.full());
+    Packet *p = rb.AllocatePacket();
+    ASSERT_NE(p, nullptr);
+    FillPacket(Ack(0x70), ToIndex(i), p);
+
+    Packet *popped = rb.PopPacket();
+    ASSERT_NE(popped, nullptr);
+    EXPECT_EQ(popped->index_sending(), ToIndex(i));
+    unsigned char length;
+    EXPECT_EQ(popped->data(&length)[0], ToIndex(i) + 1);
+    EXPECT_EQ(length, 1);
   }
+  // Now, try some lower indices. Should get dropped.
+  for (int i = 20; i < 30; ++i) {
+    EXPECT_FALSE(rb.full());
+    Packet *p = rb.AllocatePacket();
+    ASSERT_NE(p, nullptr);
+    FillPacket(Ack(0x70), ToIndex(i), p);
+  }
+  EXPECT_FALSE(rb.full());
+}
 
-  for (int x = 0; x < MESSAGE_SIZE; ++x) {
-    unsigned char header[7], data[MESSAGE_SIZE + 2];
-    unsigned char data_bytes;
-    {
-      Packet original;
-      original.IncludeAck(Ack(0xF1));
-      original.IncludeData(22, message_to_send, MESSAGE_SIZE);
-      original.Serialize(header, data, &data_bytes);
+TEST(PacketRingBufferTest, DropOutOfOrderTooHigh) {
+  PacketRingBuffer rb;
+  for (int i = 0; i < 4; ++i) {
+    EXPECT_FALSE(rb.full());
+    Packet *p = rb.AllocatePacket();
+    ASSERT_NE(p, nullptr);
+    unsigned char index = i + 1;
+    if (i == 3) {
+      index = 13;
     }
-    data[x] += 1;
-    Packet parsed;
-    for (int i = 0; i < 7; ++i) {
-      EXPECT_EQ(INCOMPLETE, parsed.ParseChar(header[i]));
-    }
+    FillPacket(Ack(0x70), index, p);
+  }
+  Packet *p = rb.AllocatePacket();
+  ASSERT_NE(p, nullptr);
+}
 
-    EXPECT_EQ(parsed.ack().error(), true);
-    EXPECT_EQ(parsed.ack().index(), 0x71);
-    EXPECT_EQ(parsed.index_sending(), 22);
+TEST(PacketRingBufferTest, PushAndPop) {
+  PacketRingBuffer rb;
+  for (int i = 0; i < 300; ++i) {
+    printf("Trial %d\n", i);
+    EXPECT_FALSE(rb.full());
+    Packet *p = rb.AllocatePacket();
+    ASSERT_NE(p, nullptr);
+    FillPacket(Ack(0x70), ToIndex(i), p);
 
-    for (int i = 0; i < MESSAGE_SIZE; ++i) {
-      EXPECT_EQ(INCOMPLETE, parsed.ParseChar(data[i]));
-    }
-    bool found_error = false;
-    for (int i = 0; i < 2; ++i) {
-      if (DATA_ERROR == parsed.ParseChar(data[MESSAGE_SIZE + i])) {
-        found_error = true;
-        break;
-      }
-    }
-    EXPECT_TRUE(found_error);
+    Packet *popped = rb.PopPacket();
+    ASSERT_NE(popped, nullptr);
+    EXPECT_EQ(popped->index_sending(), ToIndex(i));
+    unsigned char length;
+    EXPECT_EQ(popped->data(&length)[0], ToIndex(i) + 1);
+    EXPECT_EQ(length, 1);
   }
 }
 
