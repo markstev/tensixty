@@ -73,6 +73,7 @@ void PacketRingBuffer::Cleanup() {
 
 Reader::Reader(SerialInterface *serial) {
   serial_ = serial;
+  current_packet_ = nullptr;
 }
 
 bool Reader::Read() {
@@ -91,7 +92,10 @@ bool Reader::Read() {
   if (status != INCOMPLETE) {
     if (status != HEADER_ERROR) {
       outgoing_ack_ = current_packet_->ack();
-      incoming_ack_.Parse(status != PARSED, current_packet_->index_sending());
+      if (status != PARSED) {
+        incoming_ack_.Parse(true, current_packet_->index_sending());
+        // Can't ack if parsed, since it may be out of order.
+      }
     }
     current_packet_ = nullptr;
   }
@@ -99,7 +103,11 @@ bool Reader::Read() {
 }
 
 Packet* Reader::PopPacket() {
-  return buffer_.PopPacket();
+  Packet *packet = buffer_.PopPacket();
+  if (packet != nullptr) {
+    incoming_ack_.Parse(false, packet->index_sending());
+  }
+  return packet;
 }
 
 Ack Reader::PopIncomingAck() {

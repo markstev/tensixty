@@ -39,7 +39,7 @@ TEST(AckTest, SerializeDeserialize) {
 
 TEST(PacketTest, ParseOkay) {
   unsigned char header[7], data[15];
-  unsigned char data_bytes;
+  unsigned int data_bytes;
   const unsigned char MESSAGE_SIZE = 4;
   const unsigned char message_to_send[MESSAGE_SIZE] = {0x23, 0xFF, 0x01, 0x88};
   {
@@ -94,7 +94,7 @@ TEST(PacketTest, ParseOkay) {
 TEST(PacketTest, ParseHeaderNotOkay) {
   for (int i = 0; i < 7; ++i) {
     unsigned char header[7], data[15];
-    unsigned char data_bytes;
+    unsigned int data_bytes;
     const unsigned char MESSAGE_SIZE = 4;
     const unsigned char message_to_send[MESSAGE_SIZE] = {0x23, 0xFF, 0x01, 0x88};
     {
@@ -138,7 +138,7 @@ TEST(PacketTest, ParseDataNotOkay) {
 
   for (int x = 0; x < MESSAGE_SIZE; ++x) {
     unsigned char header[7], data[MESSAGE_SIZE + 2];
-    unsigned char data_bytes;
+    unsigned int data_bytes;
     {
       Packet original;
       original.IncludeAck(Ack(0xF1));

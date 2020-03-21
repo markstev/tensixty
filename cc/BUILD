@@ -24,6 +24,7 @@ cc_library(name = "commlink",
 cc_test(name = "commlink_test",
         srcs = ["commlink_test.cc"],
         deps = [":commlink",
+                ":arduino_simulator",
                 "@google_googletest//:gtest",
                 "@google_googletest//:gtest_main"
         ])

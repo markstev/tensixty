@@ -45,11 +45,13 @@ class Packet {
 
   // Copys the contents out to another pair of arrays, header and data_bytes. Header must be at least 7 bytes long,
   // and data must be at least 258 bytes long.
-  void Serialize(unsigned char *header, unsigned char *data, unsigned char *data_bytes);
+  void Serialize(unsigned char *header, unsigned char *data, unsigned int *data_bytes);
 
  private:
+  ParseStatus ParseCharInternal(const unsigned char c);
   ParseStatus ParseHeaderChar(const unsigned char c);
   ParseStatus ParseDataChar(const unsigned char c);
+  ParseStatus ReProcessPacket();
 
   Ack ack_;
   unsigned char index_sending_;

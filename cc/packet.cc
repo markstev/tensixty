@@ -19,6 +19,10 @@ void Ack::Parse(const unsigned char index_and_error) {
   index_and_error_ = index_and_error;
 }
 
+void Ack::Parse(bool error, const unsigned char index) {
+  index_and_error_ = (error ? 0x80 : 0x00) | (0x7f & index);
+}
+
 unsigned char Ack::index() const {
   return index_and_error_ & 0x7f;
 }
@@ -57,26 +61,70 @@ void Packet::Reset() {
 }
 
 ParseStatus Packet::ParseChar(const unsigned char c) {
-  ParseStatus status;
-  if (header_next_byte_index_ < NUM_HEADER_BYTES) {
-    status = ParseHeaderChar(c);
-  } else {
-    status = ParseDataChar(c);
+  ParseStatus status = ParseCharInternal(c);
+  if (status == HEADER_ERROR || status == DATA_ERROR) {
+    printf("Reprocess %d for char %d, status %d\n", status, c, status);
+    const ParseStatus adjusted_status = ReProcessPacket();
+    if (adjusted_status == INCOMPLETE || adjusted_status == PARSED) {
+      printf("Reprocess looks good 2\n");
+      status = adjusted_status;
+    }
   }
   switch (status) {
     case PARSED:
       parsed_ = true;
       break;
     case HEADER_ERROR:
+      Reset();
       error_ = true;
       break;
     case DATA_ERROR:
+      Reset();
       error_ = true;
       break;
     case INCOMPLETE:
       break;
   }
   return status;
+}
+
+ParseStatus Packet::ReProcessPacket() {
+  unsigned char byte_stream[7 + 258];
+  unsigned int num_bytes;
+  Serialize(byte_stream, byte_stream + 7 * sizeof(unsigned char), &num_bytes);
+  if (header_next_byte_index_ < NUM_HEADER_BYTES) {
+    num_bytes = header_next_byte_index_;
+  } else {
+    num_bytes = data_next_byte_index_;
+  }
+  printf("ReProcess: Num bytes = %d\n", num_bytes);
+  ParseStatus status = HEADER_ERROR;
+  for (unsigned int start = 1; start < num_bytes; ++start) {
+    Reset();
+    printf("ReProcess from start = %d\n", start);
+    int i = start;
+    for (; i < num_bytes; ++i) {
+      status = ParseCharInternal(byte_stream[i]);
+      printf("ReProcess %d -> %d\n", i , status);
+      if (status == HEADER_ERROR || status == DATA_ERROR) {
+        break;
+      }
+    }
+    if (status == INCOMPLETE || status == PARSED) {
+      printf("ReProcess looks good!\n");
+      return status;
+    }
+  }
+  return status;
+}
+
+
+ParseStatus Packet::ParseCharInternal(const unsigned char c) {
+  if (header_next_byte_index_ < NUM_HEADER_BYTES) {
+    return ParseHeaderChar(c);
+  } else {
+    return ParseDataChar(c);
+  }
 }
 
 namespace {
@@ -87,6 +135,7 @@ void UpdateChecksum(const unsigned char c, unsigned char *first_sum, unsigned ch
 }
 
 ParseStatus Packet::ParseHeaderChar(const unsigned char c) {
+  printf("Parsing %d, header_index = %d\n", c, header_next_byte_index_);
   bool error = false;
   switch (header_next_byte_index_) {
     case 0: {
@@ -111,6 +160,7 @@ ParseStatus Packet::ParseHeaderChar(const unsigned char c) {
     }
     case 5: {
       if (c != header_first_checksum_) {
+        printf("Header mismatch %d expected\n", header_first_checksum_);
         error = true;
       } else {
         ++header_next_byte_index_;
@@ -128,12 +178,11 @@ ParseStatus Packet::ParseHeaderChar(const unsigned char c) {
       break;
     }
   }
+  ++header_next_byte_index_;
   if (error) {
-    Reset();
     return HEADER_ERROR;
   }
   UpdateChecksum(c, &header_first_checksum_, &header_second_checksum_);
-  ++header_next_byte_index_;
   return INCOMPLETE;
 }
 
@@ -144,13 +193,11 @@ ParseStatus Packet::ParseDataChar(const unsigned char c) {
   } else if (data_next_byte_index_ == static_cast<const unsigned int>(data_length_)) {
     if (c != data_first_checksum_) {
       printf("Checksum expected %d != actual %d\n", data_first_checksum_, c);
-      Reset();
       return DATA_ERROR;
     }
   } else if (data_next_byte_index_ == static_cast<const unsigned int>(data_length_) + 1) {
     if (c != data_second_checksum_) {
       printf("Checksum expected %d != actual %d\n", data_second_checksum_, c);
-      Reset();
       return DATA_ERROR;
     }
     return PARSED;
@@ -174,7 +221,7 @@ void Packet::IncludeData(const unsigned char index, const unsigned char *data, c
   memcpy(data_, data, data_length * sizeof(unsigned char));
 }
 
-void Packet::Serialize(unsigned char *header, unsigned char *data, unsigned char *data_bytes) {
+void Packet::Serialize(unsigned char *header, unsigned char *data, unsigned int *data_bytes) {
   header[0] = 10;
   header[1] = 60;
   header[2] = ack_.Serialize();
