@@ -12,6 +12,7 @@ class Ack {
    Ack();
    explicit Ack(const unsigned char index_and_error);
    void Parse(const unsigned char index_and_error);
+   void Parse(bool error, const unsigned char index);
    const unsigned char Serialize() const;
    unsigned char index() const;
    bool error() const;

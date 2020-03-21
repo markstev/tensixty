@@ -17,6 +17,7 @@ cc_library(name = "commlink",
            hdrs = ["commlink.h"],
            deps = [
                ":packet",
+               ":arduino_simulator",
            ],
 )
 
@@ -26,3 +27,18 @@ cc_test(name = "commlink_test",
                 "@google_googletest//:gtest",
                 "@google_googletest//:gtest_main"
         ])
+
+cc_library(name = "arduino_simulator",
+           srcs = ["arduino_simulator.cc"],
+           hdrs = [
+               "arduino.h",
+               "arduino_simulator.h",
+               "serial_interface.h",
+           ])
+
+cc_test(name = "arduino_simulator_test",
+        srcs = ["arduino_simulator_test.cc"],
+        deps = [":arduino_simulator",
+                "@google_googletest//:gtest",
+                "@google_googletest//:gtest_main"
+                ])

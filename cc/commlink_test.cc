@@ -119,5 +119,26 @@ TEST(PacketRingBufferTest, PushAndPop) {
   }
 }
 
+TEST(ReaderTest, ReadOnePacket) {
+}
+
+TEST(ReaderTest, NoIncomingSerial) {
+}
+
+TEST(ReaderTest, ReadThenWaitForPops) {
+}
+
+TEST(ReaderTest, SendErrorForValidPacketBadIndex) {
+}
+
+TEST(ReaderTest, SendErrorForInvalidDataPacket) {
+}
+
+TEST(ReaderTest, IgnoreInvalidHeader) {
+}
+
+TEST(ReaderTest, HandleDuplicate1060) {
+}
+
 }  // namespace
 }  // namespace tensixty

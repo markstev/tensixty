@@ -1,4 +1,5 @@
 #include "packet.h"
+#include "serial_interface.h"
 
 namespace tensixty {
 
@@ -25,11 +26,20 @@ class PacketRingBuffer {
 
 class Reader {
  public:
-  void Read();
+  Reader(SerialInterface *arduino);
+  // Returns true if anything was read and the reader can keep reading.
+  // Pending acks, lack of data, or a full read buffer will cause this to return false.
+  bool Read();
+  // Returns a finished packet. Null if there are no packets.
+  Packet* PopPacket();
+  // Returns incoming and outgoing acks.
   Ack PopIncomingAck();
   Ack PopOutgoingAck();
 
  private:
+  SerialInterface *serial_;
+  // Packet under construction. Points to an object stored in buffer_.
+  Packet *current_packet_;
   PacketRingBuffer buffer_;
   Ack incoming_ack_;
   Ack outgoing_ack_;
@@ -37,9 +47,11 @@ class Reader {
 
 class Writer {
  public:
+  Writer(SerialInterface *arduino);
   void AddToOutgoingQueue(const Packet &packet);
   void Write(const Ack &incoming_ack, const Ack &outgoing_ack);
  private:
+  SerialInterface *arduino_;
 };
 
 }  // namespace tensixty

@@ -71,4 +71,47 @@ void PacketRingBuffer::Cleanup() {
   }
 }
 
+Reader::Reader(SerialInterface *serial) {
+  serial_ = serial;
+}
+
+bool Reader::Read() {
+  if (!serial_->available()) return false;
+  if (incoming_ack_.index() != 0) return false;
+  if (outgoing_ack_.index() != 0) return false;
+  if (current_packet_ == nullptr) {
+    current_packet_ = buffer_.AllocatePacket();
+  }
+  // No buffer space left.
+  if (current_packet_ == nullptr) return false;
+
+  const ParseStatus status =
+    current_packet_->ParseChar(serial_->read());
+
+  if (status != INCOMPLETE) {
+    if (status != HEADER_ERROR) {
+      outgoing_ack_ = current_packet_->ack();
+      incoming_ack_.Parse(status != PARSED, current_packet_->index_sending());
+    }
+    current_packet_ = nullptr;
+  }
+  return true;
+}
+
+Packet* Reader::PopPacket() {
+  return buffer_.PopPacket();
+}
+
+Ack Reader::PopIncomingAck() {
+  Ack ack = incoming_ack_;
+  incoming_ack_.Parse(0x00);
+  return ack;
+}
+
+Ack Reader::PopOutgoingAck() {
+  Ack ack = outgoing_ack_;
+  outgoing_ack_.Parse(0x00);
+  return ack;
+}
+
 }  // namespace tensixty
