@@ -73,6 +73,7 @@ ParseStatus Packet::ParseChar(const unsigned char c) {
   switch (status) {
     case PARSED:
       parsed_ = true;
+      printf("Parsed!\n");
       break;
     case HEADER_ERROR:
       Reset();
@@ -221,7 +222,7 @@ void Packet::IncludeData(const unsigned char index, const unsigned char *data, c
   memcpy(data_, data, data_length * sizeof(unsigned char));
 }
 
-void Packet::Serialize(unsigned char *header, unsigned char *data, unsigned int *data_bytes) {
+void Packet::Serialize(unsigned char *header, unsigned char *data, unsigned int *data_bytes) const {
   header[0] = 10;
   header[1] = 60;
   header[2] = ack_.Serialize();

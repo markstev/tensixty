@@ -24,7 +24,40 @@ class PacketRingBuffer {
   unsigned char last_index_number_;
 };
 
-class Reader {
+class OutgoingPacketBuffer {
+ public:
+  OutgoingPacketBuffer();
+  // Allocates a packet from the buffer.
+  Packet* AllocatePacket();
+
+  // Returns packets that need to be resent, if any.
+  Packet* PeekResendPacket();
+  // Finds the packet with the given index. If there is none indicated, returns
+  // the next packet to be popped. Does not remove the packet, as pop() does.
+  Packet* PeekPacket(unsigned char index);
+  Packet* NextPacket();
+  void RemovePacket(unsigned char index);
+  void MarkSent(unsigned char index);
+  void MarkResend(unsigned char index);
+ private:
+  // Returns true if packet_index precedes sent_index.
+  bool PrecedesIndex(unsigned char packet_index, unsigned char sent_index) const;
+  void UpdateNextIndex();
+  Packet buffer_[BUFFER_SIZE];
+  bool live_indices_[BUFFER_SIZE];
+  bool pending_indices_[BUFFER_SIZE];
+  // Makes it easier to handle indices wrapping around.
+  unsigned char earliest_sent_index_;
+};
+
+class AckProvider {
+ public:
+  // Returns incoming and outgoing acks.
+  virtual Ack PopIncomingAck() = 0;
+  virtual Ack PopOutgoingAck() = 0;
+};
+
+class Reader : public AckProvider {
  public:
   Reader(SerialInterface *arduino);
   // Returns true if anything was read and the reader can keep reading.
@@ -33,8 +66,8 @@ class Reader {
   // Returns a finished packet. Null if there are no packets.
   Packet* PopPacket();
   // Returns incoming and outgoing acks.
-  Ack PopIncomingAck();
-  Ack PopOutgoingAck();
+  Ack PopIncomingAck() override;
+  Ack PopOutgoingAck() override;
 
  private:
   SerialInterface *serial_;
@@ -47,11 +80,31 @@ class Reader {
 
 class Writer {
  public:
-  Writer(SerialInterface *arduino);
-  void AddToOutgoingQueue(const Packet &packet);
-  void Write(const Ack &incoming_ack, const Ack &outgoing_ack);
+  Writer(SerialInterface *arduino, AckProvider *reader);
+  // Returns false if we can't accept the packet.
+  bool AddToOutgoingQueue(const unsigned char *data, const unsigned int length);
+  bool Write();
  private:
-  SerialInterface *arduino_;
+  unsigned char NextIndex();
+  // Returns true if bytes are sent.
+  bool SendBytes(const Packet &p);
+
+  SerialInterface *serial_interface_;
+  OutgoingPacketBuffer buffer_;
+  AckProvider *reader_;
+  unsigned char current_index_;
+};
+
+class RxTxPair {
+ public:
+  RxTxPair(SerialInterface *serial);
+  bool Transmit(const unsigned char *data, const unsigned char length);
+  const unsigned char* Receive(unsigned char *length);
+  void Tick();
+
+ private:
+  Reader reader_;
+  Writer writer_;
 };
 
 }  // namespace tensixty

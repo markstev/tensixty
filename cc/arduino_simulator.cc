@@ -72,6 +72,7 @@ int FakeArduino::read() {
   if (next_byte_ != EOF) {
     const int ret = next_byte_;
     next_byte_ = EOF;
+    if (muted_) return -1;
     return ret;
   }
   int read_result = fgetc(incoming_file_);
@@ -79,13 +80,12 @@ int FakeArduino::read() {
     clearerr(incoming_file_);
     return -1;
   }
+  if (muted_) return -1;
   return read_result;
 }
 
 bool FakeArduino::available() {
-  if (next_byte_ != EOF) {
-    return true;
-  }
+  if (next_byte_ != EOF) return true;
   next_byte_ = fgetc(incoming_file_);
   if (next_byte_ != EOF) {
     return true;

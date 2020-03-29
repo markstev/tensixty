@@ -42,12 +42,19 @@ class FakeArduino : public ArduinoInterface {
 
   bool UseFiles(const char *incoming, const char *outgoing);
 
+  void Mute() {
+    muted_ = true;
+    printf("Muted.\n");
+  }
+  void UnMute() { muted_ = false; }
+
  private:
   FILE *incoming_file_ = nullptr;
   FILE *outgoing_file_ = nullptr;
   int next_byte_ = EOF;
   std::map<const unsigned int, bool> pin_states_;
   std::map<const unsigned int, bool> pin_modes_;
+  bool muted_ = false;
 };
 
 }  // namespace tensixty
