@@ -433,7 +433,7 @@ TEST(WriterTest, AddToOutgoingQueue) {
   FakeArduino s0, s1;
   ASSERT_TRUE(s0.UseFiles("/tmp/writer_add_outgoing_a", "/tmp/writer_add_outgoing_b"));
   ASSERT_TRUE(s1.UseFiles("/tmp/writer_add_outgoing_b", "/tmp/writer_add_outgoing_a"));
-  Writer writer(&s1, &reader);
+  Writer writer(*GetRealClock(), &s1, &reader);
   for (int i = 0; i < 10; ++i) {
     const unsigned char data[3] = {4, 9, 17};
     const bool added = writer.AddToOutgoingQueue(data, 3);
@@ -446,7 +446,7 @@ TEST(WriterTest, WriteOne) {
   FakeArduino s0, s1;
   ASSERT_TRUE(s0.UseFiles("/tmp/writer_write_one_a", "/tmp/writer_write_one_b"));
   ASSERT_TRUE(s1.UseFiles("/tmp/writer_write_one_b", "/tmp/writer_write_one_a"));
-  Writer writer(&s1, &reader);
+  Writer writer(*GetRealClock(), &s1, &reader);
   const unsigned char data[3] = {4, 9, 17};
   EXPECT_TRUE(writer.AddToOutgoingQueue(data, 3));
   EXPECT_TRUE(writer.Write());
@@ -480,7 +480,7 @@ TEST(WriterTest, WriteMany) {
   ASSERT_TRUE(s1.UseFiles("/tmp/writer_write_many_b", "/tmp/writer_write_many_a"));
   const unsigned char data[3] = {4, 9, 17};
   for (int ack_gap = 0; ack_gap < 3; ++ack_gap) {
-    Writer writer(&s1, &acker);
+    Writer writer(*GetRealClock(), &s1, &acker);
     Reader real_reader(&s0);
     for (int i = 0; i < 300; ++i) {
       printf("Trial %d\n", i);
@@ -520,7 +520,7 @@ TEST(WriterTest, Resend) {
   FakeArduino s0, s1;
   ASSERT_TRUE(s0.UseFiles("/tmp/writer_resend_a", "/tmp/writer_resend_b"));
   ASSERT_TRUE(s1.UseFiles("/tmp/writer_resend_b", "/tmp/writer_resend_a"));
-  Writer writer(&s1, &acker);
+  Writer writer(*GetRealClock(), &s1, &acker);
   const unsigned char data[3] = {4, 9, 17};
   EXPECT_TRUE(writer.AddToOutgoingQueue(data, 3));
   EXPECT_TRUE(writer.Write());
@@ -566,7 +566,7 @@ TEST(WriterTest, OutOfOrderTriggersResends) {
   ASSERT_TRUE(s1.UseFiles("/tmp/writer_out_of_order_b", "/tmp/writer_out_of_order_a"));
   const unsigned char data[3] = {4, 9, 17};
   for (int ack_gap = 0; ack_gap < 3; ++ack_gap) {
-    Writer writer(&s1, &acker);
+    Writer writer(*GetRealClock(), &s1, &acker);
     Reader real_reader(&s0);
     const int num_trials = 300;
     for (int i = 0; i < num_trials; ++i) {
@@ -624,7 +624,7 @@ TEST(WriterTest, SendAckOnly) {
   ASSERT_TRUE(s0.UseFiles("/tmp/writer_ack_only_a", "/tmp/writer_ack_only_b"));
   ASSERT_TRUE(s1.UseFiles("/tmp/writer_ack_only_b", "/tmp/writer_ack_only_a"));
   acker.WithIncoming(Ack(0x71));
-  Writer writer(&s1, &acker);
+  Writer writer(*GetRealClock(), &s1, &acker);
   Reader reader(&s0);
   writer.Write();
   while (reader.Read());

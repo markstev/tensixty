@@ -50,15 +50,15 @@ Packet* PacketRingBuffer::AllocatePacket() {
 }
 
 Packet* PacketRingBuffer::PopPacket() {
-  printf("Popping\n");
   for (int i = 0; i < BUFFER_SIZE; ++i) {
     if (live_indices_[i]) {
       Packet &p = buffer_[i];
-      printf("Parsed buffer_[%d] = %d, index = %d, looking for: %d\n", i,
-          p.parsed(), p.index_sending(), NextIndex(last_index_number_));
+      //printf("Parsed buffer_[%d].parsed = %d, index = %d, looking for: %d\n", i,
+      //    p.parsed(), p.index_sending(), NextIndex(last_index_number_));
       if (p.parsed() && p.index_sending() == NextIndex(last_index_number_)) {
         last_index_number_ = p.index_sending();
         live_indices_[i] = false;
+        printf("Popping\n");
         return &buffer_[i];
       }
     }
@@ -175,6 +175,15 @@ void OutgoingPacketBuffer::MarkResend(const unsigned char index) {
   }
 }
 
+void OutgoingPacketBuffer::MarkAllResend() {
+  for (int i = 0; i < BUFFER_SIZE; ++i) {
+    if (live_indices_[i]) {
+      pending_indices_[i] = true;
+      printf("Resend buffer[%d] = index %d.\n", i, buffer_[i].index_sending());
+    }
+  }
+}
+
 Packet* OutgoingPacketBuffer::PeekResendPacket() {
   for (int i = 0; i < BUFFER_SIZE; ++i) {
     if (live_indices_[i] && pending_indices_[i]) {
@@ -252,10 +261,12 @@ void OutgoingPacketBuffer::UpdateNextIndex() {
   }
 }
 
-Writer::Writer(SerialInterface *serial_interface, AckProvider *reader) {
+Writer::Writer(const Clock &clock, SerialInterface *serial_interface, AckProvider *reader) {
   serial_interface_ = serial_interface;
   reader_ = reader;
   current_index_ = 0;
+  clock_ = &clock;
+  last_send_time_ = clock_->micros();
 }
 
 unsigned char Writer::NextIndex() {
@@ -281,25 +292,32 @@ bool Writer::Write() {
       buffer_.MarkResend(outgoing_ack.index());
       printf("Mark resend %d.\n", outgoing_ack.index());
     } else {
-      printf("Remove Sent Packet.\n");
+      printf("Remove Sent Packet %d.\n", outgoing_ack.index());
       buffer_.RemovePacket(outgoing_ack.index());
     }
   }
   // 1e) resend stalled packets after time expiration.
-  // TODO
+  unsigned long now = clock_->micros();
+  if (now - last_send_time_ > 100000LL) {
+    buffer_.MarkAllResend();
+    last_send_time_ = now;
+  }
   // 1f) new packet, or empty packet with acks
-  printf("Next packet.\n");
   Packet *p = buffer_.NextPacket();
   if (p != nullptr) {
     if (p->ack().index() == 0) {
       p->IncludeAck(reader_->PopIncomingAck());
     }
-    return SendBytes(*p);
+    printf("Sending next packet: %d\n", p->index_sending());
+    bool sent = SendBytes(*p);
+    last_send_time_ = clock_->micros();
+    return sent;
   } else if (p == nullptr) {
     Ack incoming_ack = reader_->PopIncomingAck();
     if (incoming_ack.index() != 0) {
       Packet ack_only_packet;
       ack_only_packet.IncludeAck(incoming_ack);
+      printf("Sending ack-only packet.\n");
       return SendBytes(ack_only_packet);
     }
   }
@@ -314,15 +332,19 @@ bool Writer::SendBytes(const Packet &p) {
   for (int i = 0; i < 7; ++i) {
     serial_interface_->write(header[i]);
   }
+  printf("SENDING packet %d with %d bytes acking %d error=%d \n", p.index_sending(),
+      data_length, (header[2] & 0x7f), (header[2] & 0x80) == 0x80);
   for (int i = 0; i < data_length; ++i) {
     serial_interface_->write(data[i]);
   }
-  buffer_.MarkSent(p.index_sending());
+  if (p.index_sending() != 0) {
+    buffer_.MarkSent(p.index_sending());
+  }
   return true;
 }
 
-RxTxPair::RxTxPair(SerialInterface *serial)
-  : reader_(serial), writer_(serial, &reader_) {}
+RxTxPair::RxTxPair(const Clock &clock, SerialInterface *serial)
+  : reader_(serial), writer_(clock, serial, &reader_) {}
 
 bool RxTxPair::Transmit(const unsigned char *data, const unsigned char length) {
   return writer_.AddToOutgoingQueue(data, length);

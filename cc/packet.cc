@@ -53,6 +53,7 @@ void Packet::Reset() {
   error_ = false;
   header_next_byte_index_ = 0;
   data_next_byte_index_ = 0;
+  ack_.Parse(0x00);
 
   header_first_checksum_ = 0;
   header_second_checksum_ = 0;
@@ -73,7 +74,7 @@ ParseStatus Packet::ParseChar(const unsigned char c) {
   switch (status) {
     case PARSED:
       parsed_ = true;
-      printf("Parsed!\n");
+      printf("Parsed! Packet %d with %d bytes\n", index_sending_, data_length_);
       break;
     case HEADER_ERROR:
       Reset();

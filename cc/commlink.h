@@ -1,5 +1,6 @@
 #include "packet.h"
 #include "serial_interface.h"
+#include "clock_interface.h"
 
 namespace tensixty {
 
@@ -39,6 +40,7 @@ class OutgoingPacketBuffer {
   void RemovePacket(unsigned char index);
   void MarkSent(unsigned char index);
   void MarkResend(unsigned char index);
+  void MarkAllResend();
  private:
   // Returns true if packet_index precedes sent_index.
   bool PrecedesIndex(unsigned char packet_index, unsigned char sent_index) const;
@@ -80,11 +82,12 @@ class Reader : public AckProvider {
 
 class Writer {
  public:
-  Writer(SerialInterface *arduino, AckProvider *reader);
+  Writer(const Clock &clock, SerialInterface *arduino, AckProvider *reader);
   // Returns false if we can't accept the packet.
   bool AddToOutgoingQueue(const unsigned char *data, const unsigned int length);
   bool Write();
  private:
+  const Clock* clock_;
   unsigned char NextIndex();
   // Returns true if bytes are sent.
   bool SendBytes(const Packet &p);
@@ -93,11 +96,12 @@ class Writer {
   OutgoingPacketBuffer buffer_;
   AckProvider *reader_;
   unsigned char current_index_;
+  unsigned long last_send_time_;
 };
 
 class RxTxPair {
  public:
-  RxTxPair(SerialInterface *serial);
+  RxTxPair(const Clock &clock, SerialInterface *serial);
   bool Transmit(const unsigned char *data, const unsigned char length);
   const unsigned char* Receive(unsigned char *length);
   void Tick();

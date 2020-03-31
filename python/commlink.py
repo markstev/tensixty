@@ -329,6 +329,9 @@ class Writer(Loggable):
     def TransmitPacket(self, packet):
         """Sends the packet over the wire."""
         ints = packet.SerializeToInts()
+        logging.info("SENDING packet %d with %d bytes acking %d error=%d",
+                packet.Index(), packet.data_length, packet.IncomingAck().index,
+                packet.IncomingAck().error)
         for b in ints:
             self.ser.write(b)
         self.last_send_time = time.time()

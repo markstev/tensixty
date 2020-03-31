@@ -65,7 +65,7 @@ FakeArduino::~FakeArduino() {
 void FakeArduino::write(const unsigned char c) {
   fputc(c, outgoing_file_);
   fflush(outgoing_file_);
-  printf("Wrote %c = %02X\n", c, c);
+  printf("Wrote %d = %02X\n", c, c);
 }
 
 int FakeArduino::read() {
@@ -98,6 +98,7 @@ bool FakeArduino::available() {
 bool FakeArduino::UseFiles(const char *incoming, const char *outgoing) {
   incoming_file_ = fopen(incoming, "rb+");
   printf("Incoming serial file: %s\n", incoming);
+  printf("Outgoing serial file: %s\n", outgoing);
   if (incoming_file_ == nullptr) {
     // Creates the file and tries again.
     CreateAndCloseFile(incoming);
@@ -107,7 +108,7 @@ bool FakeArduino::UseFiles(const char *incoming, const char *outgoing) {
   return incoming_file_ != nullptr && outgoing_file_ != nullptr;
 }
 
-unsigned long FakeArduino::micros() {
+unsigned long FakeArduino::micros() const {
   return GetClock()->micros();
 }
 
@@ -117,6 +118,11 @@ void FakeArduino::digitalWrite(const unsigned int pin, bool value) {
 
 bool FakeArduino::digitalRead(const unsigned int pin) {
   return pin_states_[pin];
+}
+
+Clock* GetRealClock() {
+  static RealClock clock;
+  return &clock;
 }
 
 }  // namespace tensixty

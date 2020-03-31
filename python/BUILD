@@ -62,3 +62,16 @@ py_test(
     deps = [":commlink",
             ":hardware_abstraction"],
 )
+
+py_test(
+    name = "cc_python_integration_test",
+    srcs = ["cc_python_integration_test.py"],
+    deps = [
+        ":commlink",
+        ":hardware_abstraction",
+    ],
+    data = [
+        "//cc:serial_main_for_test",
+    ],
+)
+

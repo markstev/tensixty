@@ -54,9 +54,9 @@ class Packet {
   ParseStatus ReProcessPacket();
 
   Ack ack_;
-  unsigned char index_sending_;
+  unsigned char index_sending_ = 0;
   unsigned char data_[256];
-  unsigned char data_length_;
+  unsigned char data_length_ = 0;
   bool parsed_, error_;
 
   // Partial data while parsing.

@@ -10,8 +10,8 @@ TEST(PariTest, SendBothWays) {
   FakeArduino s0, s1;
   ASSERT_TRUE(s0.UseFiles("/tmp/send_bidir_a", "/tmp/send_bidir_b"));
   ASSERT_TRUE(s1.UseFiles("/tmp/send_bidir_b", "/tmp/send_bidir_a"));
-  RxTxPair p0(&s0);
-  RxTxPair p1(&s1);
+  RxTxPair p0(*GetRealClock(), &s0);
+  RxTxPair p1(*GetRealClock(), &s1);
 
   static const int NUM_TO_SEND = 3;
   const unsigned char p0_to_send[NUM_TO_SEND][5] = {

@@ -34,6 +34,7 @@ cc_library(name = "arduino_simulator",
            hdrs = [
                "arduino.h",
                "arduino_simulator.h",
+               "clock_interface.h",
                "serial_interface.h",
            ])
 
@@ -52,3 +53,11 @@ cc_test(name = "commlink_pair_test",
             "@google_googletest//:gtest",
             "@google_googletest//:gtest_main",
         ])
+
+cc_binary(name = "serial_main_for_test",
+          srcs = ["serial_main_for_test.cc"],
+          deps = [
+              ":arduino_simulator",
+              ":commlink"
+          ],
+)

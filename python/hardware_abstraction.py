@@ -50,7 +50,7 @@ class FileSerialConnection(SerialConnection):
         self.baud = baud
 
     def write(self, byte):
-        self.outgoing.write(byte)
+        self.outgoing.write(bytes([byte]))
         self.outgoing.flush()
         logging.info('write: %s', byte)
 
@@ -60,6 +60,8 @@ class FileSerialConnection(SerialConnection):
             # Avoids EOF getting set and skipping future reads.
             self.incoming.seek(self.incoming.tell())
             return None
+        result = int.from_bytes(result, byteorder='big')
+        logging.info("Read %d", result)
         return result
 
     def MakePair(self):
