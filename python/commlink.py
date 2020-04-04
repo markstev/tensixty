@@ -106,6 +106,11 @@ class PacketRingBuffer(object):
             self.empty = empty
             self.packet = packet
 
+        def __str__(self):
+            if self.empty:
+                return ''
+            return "%d => %s" % (self.packet.index_sending, self.packet.data)
+
     def __init__(self):
         self.last_packet_index = 0
         self.buffer = deque()
@@ -117,6 +122,10 @@ class PacketRingBuffer(object):
             return None
         packet = self.buffer.popleft().packet
         self.last_packet_index = packet.index_sending
+        if len(self.buffer) != 0:
+            logging.info("Remaining buffer: %s", [str(x) for x in self.buffer])
+        if len(self.buffer) > 20:
+            raise Exception("Invalid buffer len: %d: %s", len(self.buffer), [str(x) for x in self.buffer])
         return packet
 
 
@@ -124,9 +133,13 @@ class PacketRingBuffer(object):
         if packet.index_sending == 0:
             return None
         offset = packet.index_sending - self.last_packet_index
-        if offset > 0:
+        if offset > 0 and offset < 100:
+            logging.info("Insert packet %d at offset %d from %d",
+                    packet.index_sending, offset, self.last_packet_index)
             self._AppendPacket(packet, offset)
         elif offset < -100 and offset > -127:
+            logging.info("Insert packet %d at wraparound offset %d from %d",
+                    packet.index_sending, offset, self.last_packet_index)
             self._AppendPacket(packet, offset + 127)
         else:
             # Bad, duplicate packet.
@@ -171,7 +184,7 @@ class Reader(Loggable):
                     if popped:
                         self.log("popped")
                         for p in popped:
-                            self.log("Returning packet %d", p.index_sending)
+                            self.log("Returning packet %d: %s", p.index_sending, p.data)
                             rx_queue.put(p)
                 else:
                     self.incoming_error.put(packet.index_sending)

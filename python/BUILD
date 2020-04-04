@@ -73,5 +73,6 @@ py_test(
     data = [
         "//cc:serial_main_for_test",
     ],
+    timeout = "eternal",
 )
 

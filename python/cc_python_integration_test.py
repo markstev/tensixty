@@ -45,9 +45,10 @@ class PrintThread(Thread):
 
 
 class IntegrationTest(unittest.TestCase):
-    def createSerials(self, name, error_rate=0.0):
+    def createSerials(self, name, error_rate=0.0, mutation_rate=1.0):
         base_connection = FileSerialConnection(name + str(time.time()), 9600)
-        self.serial_connection = FaultableSerialConnection(base_connection, error_rate, seed=1)
+        self.serial_connection = FaultableSerialConnection(
+                base_connection, error_rate, seed=1, mutation_rate=mutation_rate)
         self.thread = RXThread(self.serial_connection)
         filename = "/tmp/cc_py_integration_test_%f" % random.Random().random()
         self.output_file = open(filename, 'wb')
@@ -79,12 +80,23 @@ class IntegrationTest(unittest.TestCase):
     #       if m0 is not None:
     #           self.assertEqual(m0, [i % 200 + 7])
 
-    def testIncrementWithErrors(self):
-        self.createSerials('testCountingErrors', 0.05)
+    #ef testIncrementWithErrors(self):
+    #   self.createSerials('testCountingErrors', 0.05)
+    #   m0 = self.thread.ReadMessage(1)
+    #   self.assertEqual(m0, None)
+    #   for i in range(400):
+    #       logging.info("Trial %d at time %f", i, time.time())
+    #       self.thread.WriteMessage([i % 200])
+    #       m0 = self.thread.ReadMessage(9.01)
+    #       self.assertTrue(m0 is not None, "missing response for trial %d" % i)
+    #       if m0 is not None:
+    #           self.assertEqual(m0, [i % 200 + 7], "bad response for trial %d; got message %s" % (i, m0))
+    def testIncrementWithErrorsAndDroppedChars(self):
+        self.createSerials('testCountingErrorsDroppedChars', 0.05, mutation_rate=0.7)
         m0 = self.thread.ReadMessage(1)
         self.assertEqual(m0, None)
-        for i in range(400):
-            logging.info("Trial %d at time %f", i, time.time())
+        for i in range(4000):
+            logging.info("Trial %d at time %f (packet %d)", i, time.time(), (i % 127) + 1)
             self.thread.WriteMessage([i % 200])
             m0 = self.thread.ReadMessage(9.01)
             self.assertTrue(m0 is not None, "missing response for trial %d" % i)
