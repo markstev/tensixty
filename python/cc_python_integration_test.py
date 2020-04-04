@@ -68,29 +68,29 @@ class IntegrationTest(unittest.TestCase):
         self.print_thread.running = False
         self.print_thread.join()
 
-    #ef testIncrement(self):
-    #   self.createSerials('testCounting')
-    #   m0 = self.thread.ReadMessage(1)
-    #   self.assertEqual(m0, None)
-    #   for i in range(400):
-    #       logging.info("Trial %d", i)
-    #       self.thread.WriteMessage([i % 200])
-    #       m0 = self.thread.ReadMessage(1.01)
-    #       self.assertTrue(m0 is not None)
-    #       if m0 is not None:
-    #           self.assertEqual(m0, [i % 200 + 7])
+    def testIncrement(self):
+        self.createSerials('testCounting')
+        m0 = self.thread.ReadMessage(1)
+        self.assertEqual(m0, None)
+        for i in range(400):
+            logging.info("Trial %d", i)
+            self.thread.WriteMessage([i % 200])
+            m0 = self.thread.ReadMessage(1.01)
+            self.assertTrue(m0 is not None)
+            if m0 is not None:
+                self.assertEqual(m0, [i % 200 + 7])
 
-    #ef testIncrementWithErrors(self):
-    #   self.createSerials('testCountingErrors', 0.05)
-    #   m0 = self.thread.ReadMessage(1)
-    #   self.assertEqual(m0, None)
-    #   for i in range(400):
-    #       logging.info("Trial %d at time %f", i, time.time())
-    #       self.thread.WriteMessage([i % 200])
-    #       m0 = self.thread.ReadMessage(9.01)
-    #       self.assertTrue(m0 is not None, "missing response for trial %d" % i)
-    #       if m0 is not None:
-    #           self.assertEqual(m0, [i % 200 + 7], "bad response for trial %d; got message %s" % (i, m0))
+    def testIncrementWithErrors(self):
+        self.createSerials('testCountingErrors', 0.05)
+        m0 = self.thread.ReadMessage(1)
+        self.assertEqual(m0, None)
+        for i in range(400):
+            logging.info("Trial %d at time %f", i, time.time())
+            self.thread.WriteMessage([i % 200])
+            m0 = self.thread.ReadMessage(9.01)
+            self.assertTrue(m0 is not None, "missing response for trial %d" % i)
+            if m0 is not None:
+                self.assertEqual(m0, [i % 200 + 7], "bad response for trial %d; got message %s" % (i, m0))
     def testIncrementWithErrorsAndDroppedChars(self):
         self.createSerials('testCountingErrorsDroppedChars', 0.05, mutation_rate=0.7)
         m0 = self.thread.ReadMessage(1)
