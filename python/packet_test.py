@@ -65,7 +65,7 @@ class PacketTest(unittest.TestCase):
             stream[i] = (stream[i] + 7) % 256
             p2 = Packet()
             stream_after_read = p2.ParseFromIntStream(stream)
-            self.assertEqual(stream_after_read, stream)
+            self.assertEqual(stream_after_read, [])
             self.assertEqual(p2.Parsed(), True)
             self.assertEqual(p2.DataOk(), False)
 
@@ -85,12 +85,12 @@ class PacketTest(unittest.TestCase):
                 stream[i] = j
                 full_stream += stream
                 p2 = Packet()
-                stream_after_read = p2.ParseFromIntStream(full_stream)
+                full_stream = p2.ParseFromIntStream(full_stream)
                 if p2.Parsed() and p2.DataOk():
                     break
             self.assertEqual(p2.Parsed(), True)
             self.assertEqual(p2.DataOk(), True)
-            self.assertEqual([], stream_after_read)
+            self.assertEqual([], full_stream)
 
 
 if __name__ == '__main__':

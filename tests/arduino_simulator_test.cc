@@ -33,8 +33,6 @@ TEST(HardwareAbstractionTest, SerialIO) {
   ASSERT_TRUE(s1.UseFiles("/tmp/test_serial_io_b", "/tmp/test_serial_io_a"));
   EXPECT_FALSE(s0.available());
   EXPECT_FALSE(s1.available());
-  EXPECT_EQ(-1, s0.read());
-  EXPECT_EQ(-1, s1.read());
   s0.write(0x42);
   EXPECT_EQ(s1.read(), 0x42);
   EXPECT_FALSE(s1.available());

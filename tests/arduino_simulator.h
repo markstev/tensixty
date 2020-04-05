@@ -1,8 +1,8 @@
 #ifndef hardware_simulator_arduino_simulator_h_
 #define hardware_simulator_arduino_simulator_h_
 
-#include "arduino.h"
-#include "clock_interface.h"
+#include "cc/arduino.h"
+#include "cc/clock_interface.h"
 #include <stdio.h>
 #include <chrono>
 #include <map>
@@ -33,7 +33,7 @@ class FakeArduino : public ArduinoInterface {
   unsigned long micros() const override;
 
   void write(const unsigned char c) override;
-  int read() override;
+  unsigned char read() override;
   bool available() override;
 
   bool UseFiles(const char *incoming, const char *outgoing);

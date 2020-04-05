@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
-#include "commlink.h"
+#include "cc/commlink.h"
 #include "arduino_simulator.h"
-#include "serial_interface.h"
+#include "cc/serial_interface.h"
 
 namespace tensixty {
 namespace {

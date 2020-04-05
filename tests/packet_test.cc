@@ -1,7 +1,7 @@
 // Using https://github.com/google/googletest
 
 #include <gtest/gtest.h>
-#include "packet.h"
+#include "cc/packet.h"
 
 namespace tensixty {
 namespace {

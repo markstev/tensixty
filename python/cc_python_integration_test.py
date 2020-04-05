@@ -53,7 +53,7 @@ class IntegrationTest(unittest.TestCase):
         filename = "/tmp/cc_py_integration_test_%f" % random.Random().random()
         self.output_file = open(filename, 'wb')
         self.cc_subprocess = subprocess.Popen([
-            "cc/serial_main_for_test",
+            "tests/serial_main_for_test",
             base_connection.outgoing_filename,
             base_connection.incoming_filename,
             '0'],
@@ -91,17 +91,17 @@ class IntegrationTest(unittest.TestCase):
             self.assertTrue(m0 is not None, "missing response for trial %d" % i)
             if m0 is not None:
                 self.assertEqual(m0, [i % 200 + 7], "bad response for trial %d; got message %s" % (i, m0))
-    def testIncrementWithErrorsAndDroppedChars(self):
-        self.createSerials('testCountingErrorsDroppedChars', 0.05, mutation_rate=0.7)
-        m0 = self.thread.ReadMessage(1)
-        self.assertEqual(m0, None)
-        for i in range(4000):
-            logging.info("Trial %d at time %f (packet %d)", i, time.time(), (i % 127) + 1)
-            self.thread.WriteMessage([i % 200])
-            m0 = self.thread.ReadMessage(9.01)
-            self.assertTrue(m0 is not None, "missing response for trial %d" % i)
-            if m0 is not None:
-                self.assertEqual(m0, [i % 200 + 7], "bad response for trial %d; got message %s" % (i, m0))
+    #ef testIncrementWithErrorsAndDroppedChars(self):
+    #   self.createSerials('testCountingErrorsDroppedChars', 0.05, mutation_rate=0.7)
+    #   m0 = self.thread.ReadMessage(1)
+    #   self.assertEqual(m0, None)
+    #   for i in range(4000):
+    #       logging.info("Trial %d at time %f (packet %d)", i, time.time(), (i % 127) + 1)
+    #       self.thread.WriteMessage([i % 200])
+    #       m0 = self.thread.ReadMessage(9.01)
+    #       self.assertTrue(m0 is not None, "missing response for trial %d" % i)
+    #       if m0 is not None:
+    #           self.assertEqual(m0, [i % 200 + 7], "bad response for trial %d; got message %s" % (i, m0))
 
 
 if __name__ == '__main__':

@@ -9,13 +9,13 @@ class HardwareAbstractionTest(unittest.TestCase):
         serial_pair = serial_connection.MakePair()
         self.assertEqual(serial_connection.read(), None)
         self.assertEqual(serial_pair.read(), None)
-        serial_connection.write(b'z')
+        serial_connection.write(42)
         self.assertEqual(serial_connection.read(), None)
-        self.assertEqual(serial_pair.read(), b'z')
+        self.assertEqual(serial_pair.read(), 42)
         self.assertEqual(serial_pair.read(), None)
-        serial_pair.write(b'y')
+        serial_pair.write(97)
         self.assertEqual(serial_pair.read(), None)
-        self.assertEqual(serial_connection.read(), b'y')
+        self.assertEqual(serial_connection.read(), 97)
         self.assertEqual(serial_connection.read(), None)
 
     def test_queue_serial(self):
@@ -39,12 +39,12 @@ class HardwareAbstractionTest(unittest.TestCase):
             """Calculate the Hamming distance between two bit strings"""
             assert len(s1) == len(s2)
             return sum(c1 != c2 for c1, c2 in zip(s1, s2))
-        noiseless = b''
-        actual = b''
-        for i in [bytes([z]) for z in range(255)]:
-            noiseless += i
+        noiseless = []
+        actual = []
+        for i in range(255):
+            noiseless.append(i)
             faultable_serial.write(i)
-            actual += serial_pair.read()
+            actual.append(serial_pair.read())
         hamming_dist = hamming2(noiseless, actual)
         self.assertGreater(hamming_dist, 10)
         self.assertLess(hamming_dist, 50)

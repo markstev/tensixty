@@ -68,7 +68,7 @@ void FakeArduino::write(const unsigned char c) {
   printf("Wrote %d = %02X\n", c, c);
 }
 
-int FakeArduino::read() {
+unsigned char FakeArduino::read() {
   if (next_byte_ != EOF) {
     const int ret = next_byte_;
     next_byte_ = EOF;

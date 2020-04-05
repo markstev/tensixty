@@ -10,7 +10,7 @@ cc_library(name = "commlink",
            hdrs = ["commlink.h"],
            deps = [
                ":packet",
-               ":arduino_simulator",
+               ":interfaces",
            ],
 )
 

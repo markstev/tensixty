@@ -1,8 +1,3 @@
-#if defined(ARDUINO) && ARDUINO >= 100
-  #include "Arduino.h"
-#else
-  #include "WProgram.h"
-#endif 
 #include "commlink.h"
 #include <string.h>
 #include <stdio.h>
@@ -339,7 +334,6 @@ bool Writer::SendBytes(const Packet &p) {
   }
   printf("SENDING packet %d with %d bytes acking %d error=%d \n", p.index_sending(),
       data_length, (header[2] & 0x7f), (header[2] & 0x80) == 0x80);
-  digitalWrite(39, false);
   for (int i = 0; i < data_length; ++i) {
     serial_interface_->write(data[i]);
   }
