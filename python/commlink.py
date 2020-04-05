@@ -165,6 +165,8 @@ class Reader(Loggable):
         self.outgoing_ok = Queue(10)
         self.outgoing_error = Queue(10)
         self.incoming_buffer = PacketRingBuffer()
+        self.incoming_errors = 0
+        self.outgoing_errors = 0
 
     def Read(self, rx_queue):
         self.ReadIntoBuffer()
@@ -185,8 +187,10 @@ class Reader(Loggable):
                             rx_queue.put(p)
                 else:
                     self.incoming_error.put(packet.index_sending)
+                    self.incoming_errors += 1
                 if packet.error:
                     self.outgoing_error.put(packet.index_ack)
+                    self.outgoing_errors += 1
                 else:
                     self.outgoing_ok.put(packet.index_ack)
 
@@ -410,6 +414,9 @@ class RXThread(Thread, Loggable):
     def done(self):
         return (self.messages_requested == self.messages_writer_accepted
                 and self.writer.done()) or not self.is_alive()
+
+    def error_counts(self):
+        return (self.reader.incoming_errors, self.reader.outgoing_errors)
 
     def RxTxLoop(self):
         """Called in a loop; handles a single rx/tx pair."""

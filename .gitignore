@@ -3,3 +3,5 @@ bazel-*
 *swn
 *swo
 *swp
+__pycache__
+cc/build
