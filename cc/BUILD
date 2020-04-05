@@ -5,13 +5,6 @@ cc_library(name = "packet",
            hdrs = ["packet.h"],
 )
 
-cc_test(name = "packet_test",
-        srcs = ["packet_test.cc"],
-        deps = [":packet",
-                "@google_googletest//:gtest",
-                "@google_googletest//:gtest_main"
-        ])
-
 cc_library(name = "commlink",
            srcs = ["commlink.cc"],
            hdrs = ["commlink.h"],
@@ -21,43 +14,9 @@ cc_library(name = "commlink",
            ],
 )
 
-cc_test(name = "commlink_test",
-        srcs = ["commlink_test.cc"],
-        deps = [":commlink",
-                ":arduino_simulator",
-                "@google_googletest//:gtest",
-                "@google_googletest//:gtest_main"
-        ])
-
-cc_library(name = "arduino_simulator",
-           srcs = ["arduino_simulator.cc"],
+cc_library(name = "interfaces",
            hdrs = [
                "arduino.h",
-               "arduino_simulator.h",
                "clock_interface.h",
                "serial_interface.h",
            ])
-
-cc_test(name = "arduino_simulator_test",
-        srcs = ["arduino_simulator_test.cc"],
-        deps = [":arduino_simulator",
-                "@google_googletest//:gtest",
-                "@google_googletest//:gtest_main"
-        ])
-
-cc_test(name = "commlink_pair_test",
-        srcs = ["commlink_pair_test.cc"],
-        deps = [
-            ":commlink",
-            ":arduino_simulator",
-            "@google_googletest//:gtest",
-            "@google_googletest//:gtest_main",
-        ])
-
-cc_binary(name = "serial_main_for_test",
-          srcs = ["serial_main_for_test.cc"],
-          deps = [
-              ":arduino_simulator",
-              ":commlink"
-          ],
-)

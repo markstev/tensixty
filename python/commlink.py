@@ -4,6 +4,8 @@ from collections import namedtuple, deque
 from queue import Queue, Empty
 import time
 
+LOGGING_ON = False
+
 def Checksum(ints):
   first_sum = 0
   second_sum = 0
@@ -94,9 +96,10 @@ class Loggable(object):
         self.name = name
 
     def log(self, *args):
-        args_with_name = []
-        args_with_name = ("%s: " + args[0], self.name) + args[1:]
-        logging.info(*args_with_name)
+        if LOGGING_ON:
+            args_with_name = []
+            args_with_name = ("%s: " + args[0], self.name) + args[1:]
+            logging.info(*args_with_name)
 
 
 class PacketRingBuffer(object):
@@ -122,8 +125,6 @@ class PacketRingBuffer(object):
             return None
         packet = self.buffer.popleft().packet
         self.last_packet_index = packet.index_sending
-        if len(self.buffer) != 0:
-            logging.info("Remaining buffer: %s", [str(x) for x in self.buffer])
         if len(self.buffer) > 20:
             raise Exception("Invalid buffer len: %d: %s", len(self.buffer), [str(x) for x in self.buffer])
         return packet
@@ -134,12 +135,8 @@ class PacketRingBuffer(object):
             return None
         offset = packet.index_sending - self.last_packet_index
         if offset > 0 and offset < 100:
-            logging.info("Insert packet %d at offset %d from %d",
-                    packet.index_sending, offset, self.last_packet_index)
             self._AppendPacket(packet, offset)
         elif offset < -100 and offset > -127:
-            logging.info("Insert packet %d at wraparound offset %d from %d",
-                    packet.index_sending, offset, self.last_packet_index)
             self._AppendPacket(packet, offset + 127)
         else:
             # Bad, duplicate packet.
@@ -172,7 +169,7 @@ class Reader(Loggable):
     def Read(self, rx_queue):
         self.ReadIntoBuffer()
         if self.bytes:
-            #self.log("Got some bytes")
+            self.log("Got some bytes")
             packet = Packet()
             self.bytes = packet.ParseFromIntStream(self.bytes)
             if packet.Parsed():
@@ -297,7 +294,7 @@ class Writer(Loggable):
 
     def PopSentForAck(self, ack):
         """Updates the sent_messages list given an ack."""
-        logging.info("Ack: %s", ack)
+        self.log("Ack: %s", ack)
         found = False
         for ack_position, message in enumerate(self.sent_messages):
             if message.index == ack.index:
@@ -318,13 +315,14 @@ class Writer(Loggable):
         """Adds the data part of the packet."""
         packet_type = NO_PACKET
         if len(self.sent_messages) >= self.max_outgoing_length:
-            #self.log("Too many sent; no write.")
+            self.log("Too many sent; no write.")
             return packet_type
         if len(self.retry_queue) > 0:
             self.log("Retry rather than use queue.")
             sending = self.retry_queue.popleft()
             packet_type = RETRY_PACKET
         elif not tx_queue.empty():
+            self.log("Sending new message.")
             sending = SentMessage(self.next_index, tx_queue.get())
             self.next_index += 1
             self.next_index = self.next_index % 128
@@ -342,7 +340,7 @@ class Writer(Loggable):
     def TransmitPacket(self, packet):
         """Sends the packet over the wire."""
         ints = packet.SerializeToInts()
-        logging.info("SENDING packet %d with %d bytes acking %d error=%d",
+        self.log("SENDING packet %d with %d bytes acking %d error=%d",
                 packet.Index(), packet.data_length, packet.IncomingAck().index,
                 packet.IncomingAck().error)
         for b in ints:

@@ -1,6 +1,7 @@
 import serial
 import queue
 import logging
+import time
 from random import Random
 
 class SerialConnection(object):
@@ -22,13 +23,39 @@ class SerialConnection(object):
 
 class HardwareSerialConnection(SerialConnection):
     def __init__(self, port, baud):
-        self.ser = serial.Serial(port, baud, timeout=0, rtscts=True)  # 1s timeout
+        self.ser = serial.Serial(port, baud, timeout=0, rtscts=True)
+        # This sleep is critical -- the serial line needs quiet time to initialize.
+        logging.info("Ser stuff %s %s %s %s %s %s %s",
+                self.ser.inWaiting(),
+                self.ser.getCD(),
+                self.ser.getCTS(),
+                self.ser.getDSR(),
+                self.ser.getRI(),
+                self.ser.readable(),
+                self.ser.writable()
+                )
+        time.sleep(2.0)
+        logging.info("Ser stuff %s %s %s %s %s %s %s",
+                self.ser.inWaiting(),
+                self.ser.getCD(),
+                self.ser.getCTS(),
+                self.ser.getDSR(),
+                self.ser.getRI(),
+                self.ser.readable(),
+                self.ser.writable()
+                )
 
     def write(self, byte):
-        self.ser.write(byte)
+        b = bytes([byte])
+        self.ser.write(b)
 
     def read(self):
-        return self.ser.read()
+        b = self.ser.read()
+        if b == b'':
+            return None
+        else:
+            result = int.from_bytes(b, byteorder='big')
+            return result
 
 class FileSerialConnection(SerialConnection):
     def __init__(self, port, baud, incoming_filename=None, outgoing_filename=None):

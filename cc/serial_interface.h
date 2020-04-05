@@ -8,7 +8,7 @@ class SerialInterface {
    virtual ~SerialInterface() {}
 
   virtual void write(const unsigned char c) = 0;
-  virtual int read() = 0;
+  virtual unsigned char read() = 0;
   virtual bool available() = 0;
 };
 

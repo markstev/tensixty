@@ -71,7 +71,7 @@ py_test(
         ":hardware_abstraction",
     ],
     data = [
-        "//cc:serial_main_for_test",
+        "//tests:serial_main_for_test",
     ],
     timeout = "eternal",
 )
