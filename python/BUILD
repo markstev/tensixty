@@ -17,6 +17,7 @@ py_test(
     name = "hardware_abstraction_test",
     srcs = ["hardware_abstraction_test.py"],
     deps = [":hardware_abstraction"],
+    python_version = "PY3",
 )
 
 py_test(
@@ -24,6 +25,7 @@ py_test(
     srcs = ["packet_test.py"],
     deps = [":commlink",
             ":hardware_abstraction"],
+    python_version = "PY3",
 )
 
 py_test(
@@ -31,6 +33,7 @@ py_test(
     srcs = ["commlink_writer_test.py"],
     deps = [":commlink",
             ":hardware_abstraction"],
+    python_version = "PY3",
 )
 
 py_test(
@@ -38,6 +41,7 @@ py_test(
     srcs = ["commlink_reader_test.py"],
     deps = [":commlink",
             ":hardware_abstraction"],
+    python_version = "PY3",
 )
 
 py_test(
@@ -46,6 +50,7 @@ py_test(
     deps = [":commlink",
             ":hardware_abstraction"],
     timeout = "short",
+    python_version = "PY3",
 )
 
 py_test(
@@ -54,6 +59,7 @@ py_test(
     deps = [":commlink",
             ":hardware_abstraction"],
     timeout = "eternal",
+    python_version = "PY3",
 )
 
 py_test(
@@ -61,6 +67,7 @@ py_test(
     srcs = ["commlink_profile.py"],
     deps = [":commlink",
             ":hardware_abstraction"],
+    python_version = "PY3",
 )
 
 py_test(
@@ -74,5 +81,6 @@ py_test(
         "//tests:serial_main_for_test",
     ],
     timeout = "eternal",
+    python_version = "PY3",
 )
 
