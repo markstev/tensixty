@@ -112,6 +112,9 @@ unsigned long FakeArduino::micros() const {
   return GetClock()->micros();
 }
 
+void FakeArduino::pinMode(unsigned int pin, int mode) {
+}
+
 void FakeArduino::digitalWrite(const unsigned int pin, bool value) {
   pin_states_[pin] = value;
 }

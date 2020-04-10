@@ -31,6 +31,7 @@ class FakeArduino : public ArduinoInterface {
   void digitalWrite(const unsigned int pin, bool value) override;
   bool digitalRead(const unsigned int pin) override;
   unsigned long micros() const override;
+  void pinMode(unsigned int pin, int mode) override;
 
   void write(const unsigned char c) override;
   unsigned char read() override;

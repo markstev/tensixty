@@ -1,3 +1,6 @@
+#ifndef TENSIXTY_COMMLINK_H_
+#define TENSIXTY_COMMLINK_H_
+
 #include "packet.h"
 #include "serial_interface.h"
 #include "clock_interface.h"
@@ -112,3 +115,5 @@ class RxTxPair {
 };
 
 }  // namespace tensixty
+
+#endif  // TENSIXTY_COMMLINK_H_
