@@ -24,9 +24,12 @@ class FakeClock : public Clock {
 FakeClock* GetFakeClock();
 Clock* GetRealClock();
 
+static const bool OUTPUT = true;
+static const bool INPUT = false;
+
 class FakeArduino : public ArduinoInterface {
  public:
-   ~FakeArduino();
+  ~FakeArduino();
 
   void digitalWrite(const unsigned int pin, bool value) override;
   bool digitalRead(const unsigned int pin) override;
@@ -38,6 +41,10 @@ class FakeArduino : public ArduinoInterface {
   void setPinModeOutput(unsigned int pin) override;
   void setPinModeInput(unsigned int pin) override;
   void setPinModePullup(unsigned int pin) override;
+
+  bool testGetPinOutput(unsigned int pin) { return pin_states_[pin]; }
+  void testSetPinInput(unsigned int pin, bool high) { pin_states_[pin] = high; }
+  bool testIsPinOutput(unsigned int pin) { return pin_modes_[pin] == OUTPUT; }
 
   bool UseFiles(const char *incoming, const char *outgoing);
 

@@ -27,6 +27,23 @@ TEST(HardwareAbstractionTest, digitalWriteSomePins2) {
   EXPECT_EQ(false, arduino.digitalRead(10));
 }
 
+TEST(HardwareAbstractionTest, pinModes) {
+  FakeArduino arduino;
+  arduino.setPinModeOutput(17);
+  EXPECT_EQ(arduino.testIsPinOutput(17), OUTPUT);
+  arduino.setPinModeInput(17);
+  EXPECT_EQ(arduino.testIsPinOutput(17), INPUT);
+  arduino.testSetPinInput(17, true);
+  EXPECT_EQ(arduino.digitalRead(17), true);
+  arduino.testSetPinInput(17, false);
+  EXPECT_EQ(arduino.digitalRead(17), false);
+  arduino.setPinModeOutput(17);
+  arduino.digitalWrite(17, true);
+  EXPECT_EQ(arduino.testGetPinOutput(17), true);
+  arduino.digitalWrite(17, false);
+  EXPECT_EQ(arduino.testGetPinOutput(17), false);
+}
+
 TEST(HardwareAbstractionTest, SerialIO) {
   FakeArduino s0, s1;
   ASSERT_TRUE(s0.UseFiles("/tmp/test_serial_io_a", "/tmp/test_serial_io_b"));
