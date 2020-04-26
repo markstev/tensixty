@@ -1,6 +1,6 @@
 #=============================================================================#
-# Author: MarkStevens
-# Date:   2020/04/04
+# Author: MarkStevens                                                         #
+# Date:   2020/04/04                                                          #
 #                                                                             #
 # Description: Defines a cmake library for error-resilient serial             #
 # communication.                                                              #
@@ -19,11 +19,13 @@ SET(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "")
 
 set(tensixty_SRCS
   commlink.cc
-  packet.cc)
+  packet.cc
+  real_arduino.cc)
 set(tensixty_HDRS
   commlink.h
   packet.h
   arduino.h
+  real_arduino.h
   serial_interface.h
   clock_interface.h)
 set(tensixty_BOARD mega2560)
