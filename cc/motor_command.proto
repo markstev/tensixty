@@ -1,0 +1,51 @@
+syntax = "proto2";
+
+import "nanopb.proto";
+
+// Regen command for python:
+// protoc --proto_path=arduino/proto --python_out=protoc arduino/proto/motor_command.proto
+
+message MotorInitProto {
+  // Required?!?! Why?
+  // It turns out that nanopb ignores optional fields, hence the deviation from
+  // Google norms.
+  required int32 address = 1;
+  required int32 enable_pin = 2;
+  required int32 dir_pin = 3;
+  required int32 step_pin = 4;
+}
+
+message MotorMoveProto {
+  // Speeds are between 0.0 and 1.0.
+  required float max_speed = 1;
+  // We start at this min speed and will try to decelerate back to it.
+  required float min_speed = 2;
+  required bool disable_after_moving = 3;
+  // If set, used instead of steps.
+  required int32 absolute_steps = 4;
+  required float acceleration = 5;
+}
+
+message MotorConfigProto {
+  required int32 address = 1;
+  required bool zero = 5;
+  required int32 min_steps = 6;
+  required int32 max_steps = 7;
+}
+
+message MotorMoveAllProto {
+  repeated MotorMoveProto motors = 1 [(nanopb).max_count = 6, (nanopb).fixed_count = true];
+}
+
+message MotorTareProto {
+  required int32 address = 1;
+  required int32 tare_to_steps = 2;
+}
+
+message MotorReportProto {
+  required int32 current_absolute_steps = 1;
+}
+
+message AllMotorReportProto {
+  repeated MotorReportProto motors = 1 [(nanopb).max_count = 6, (nanopb).fixed_count = true];
+}
