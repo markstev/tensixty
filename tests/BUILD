@@ -39,8 +39,35 @@ cc_test(name = "arduino_simulator_test",
 cc_test(name = "commlink_pair_test",
         srcs = ["commlink_pair_test.cc"],
         deps = [
-            "//cc:commlink",
             ":arduino_simulator",
+            "//cc:commlink",
+            "@google_googletest//:gtest",
+            "@google_googletest//:gtest_main",
+        ])
+
+cc_test(name = "module_dispatcher_test",
+        srcs = ["module_dispatcher_test.cc"],
+        deps = [
+            "//cc:module_dispatcher",
+            "@google_googletest//:gtest",
+            "@google_googletest//:gtest_main",
+        ])
+
+cc_test(name = "motor_test",
+        srcs = ["motor_test.cc"],
+        deps = [
+            ":arduino_simulator",
+            "//cc:motor",
+            "@google_googletest//:gtest",
+            "@google_googletest//:gtest_main",
+        ])
+
+cc_test(name = "motor_bank_module_test",
+        srcs = ["motor_bank_module_test.cc"],
+        deps = [
+            ":arduino_simulator",
+            "//cc:module_dispatcher",
+            "//cc:motor_bank_module",
             "@google_googletest//:gtest",
             "@google_googletest//:gtest_main",
         ])

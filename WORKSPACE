@@ -9,8 +9,15 @@ http_archive(
      sha256 = "ff7a82736e158c077e76188232eac77913a15dac0b22508c390ab3f88e6d6d86",
 )
 
-##git_repository(
-##		name = "platformio_rules",
-##		remote = "http://github.com/mum4k/platformio_rules.git",
-##		tag = "v0.0.9",
-##)
+git_repository(
+    name = "com_github_nanopb_nanopb",
+    remote = "https://github.com/nanopb/nanopb.git",
+    commit = "58699f8a737823eabe001d4c1cf7ab2684ced861",
+)
+
+git_repository(
+    name = "com_google_protobuf",
+    commit = "09745575a923640154bcf307fba8aedff47f240a",
+    remote = "https://github.com/protocolbuffers/protobuf",
+    shallow_since = "1558721209 -0700",
+)
