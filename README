@@ -54,3 +54,7 @@ Data
   - A length of N (up to 256) bytes being delivered.
   - Two checksum bytes on the previous N data bytes (not header) to verify
     integrity of the data block.
+
+-------- How to regenerate the python proto file --------
+
+protoc --proto_path=../cc --python_out=. motor_command.proto --proto_path=/path/to/nanopb/generator/proto
