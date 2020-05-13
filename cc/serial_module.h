@@ -2,9 +2,9 @@
 #define MARKBOT_SERIAL_MODULE_H_
 
 #include "module_dispatcher.h"
-#include "cc/clock_interface.h"
-#include "cc/serial_interface.h"
-#include "cc/commlink.h"
+#include "clock_interface.h"
+#include "serial_interface.h"
+#include "commlink.h"
 
 namespace markbot {
 
