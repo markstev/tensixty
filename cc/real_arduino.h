@@ -1,7 +1,7 @@
 #ifndef COM_GITHUB_MARKSTEV_TENSIXTY_REAL_ARDUINO_H_
 #define COM_GITHUB_MARKSTEV_TENSIXTY_REAL_ARDUINO_H_
 
-#include "includes/tensixty/cc/arduino.h"
+#include "arduino.h"
 
 namespace tensixty {
 
