@@ -3,7 +3,7 @@
 #else
   #include "WProgram.h"
 #endif 
-#include "arduino.h"
+#include "real_arduino.h"
 
 namespace tensixty {
 
