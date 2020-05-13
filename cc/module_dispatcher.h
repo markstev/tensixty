@@ -13,6 +13,8 @@ class Message {
   Message(const Message &other);
   unsigned char length() const { return length_ > 0 ? length_ - 1 : 0; }
   const unsigned char* data() const { return data_ == nullptr ? nullptr : data_ + sizeof(unsigned char); }
+  const unsigned char* raw_data() const { return data_; }
+  unsigned char raw_length() const { return length_; }
   unsigned char type() const { return message_type_; }
   
  private:

@@ -37,7 +37,7 @@ void ModuleDispatcher::Add(Module *module) {
 void ModuleDispatcher::HandleLoopMessages() {
   for (int i = 0; i < num_modules_; ++i) {
     const Message message = modules_[i]->Tick();
-    if (message.length() == 0) continue;
+    if (message.type() == 0) continue;
     for (int j = 0; j < num_modules_; ++j) {
       if (i == j) continue;  // Let's not do self-passing...
       //  TODO: push back if message can't be accepted due to overloading.
