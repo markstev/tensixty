@@ -1,9 +1,9 @@
 #ifndef COM_GITHUB_MARKSTEV_MARKBOT_MOTOR_H_
 #define COM_GITHUB_MARKSTEV_MARKBOT_MOTOR_H_
 
-#include "cc/motor_command.pb.h"
+#include "motor_command.pb.h"
 #include <stdint.h>
-#include "cc/arduino.h"
+#include "arduino.h"
 
 namespace markbot {
 
@@ -56,6 +56,7 @@ class Motor {
   int32_t min_steps_;
   volatile int32_t current_absolute_steps_;
   volatile int32_t target_absolute_steps_;
+  int32_t increment_ = 1;
 };
 
 }  // namespace markbot
