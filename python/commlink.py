@@ -4,7 +4,7 @@ from collections import namedtuple, deque
 from queue import Queue, Empty
 import time
 
-LOGGING_ON = False
+LOGGING_ON = True
 
 def Checksum(ints):
   first_sum = 0
@@ -117,6 +117,7 @@ class PacketRingBuffer(object):
     def __init__(self):
         self.last_packet_index = 0
         self.buffer = deque()
+        self.just_initialized = True
 
     def PopPacket(self):
         if len(self.buffer) == 0:
@@ -133,6 +134,10 @@ class PacketRingBuffer(object):
     def InsertPacket(self, packet):
         if packet.index_sending == 0:
             return None
+        if self.just_initialized:
+            if packet.index_sending != 1:
+                return None
+            self.just_initialized = False
         offset = packet.index_sending - self.last_packet_index
         if offset > 0 and offset < 100:
             self._AppendPacket(packet, offset)
