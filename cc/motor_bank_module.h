@@ -7,21 +7,19 @@
 #include "pb_encode.h"
 
 #include "module_dispatcher.h"
-#include "cc/motor_command.pb.h"
+#include "motor_command.pb.h"
 #include "motor.h"
 
 namespace markbot {
 
 const int NUM_MOTORS = 6;
 
-Motor MOTORS[NUM_MOTORS];
-
 const unsigned char MOTOR_INIT = 0x10;
 const unsigned char MOTOR_CONFIG = 0x11;
 const unsigned char MOTOR_MOVE = 0x12;
 const unsigned char MOTOR_TARE = 0x13;
 const unsigned char MOTOR_REQUEST_REPORT = 0x14;
-const unsigned char MOTOR_REPORT = 0x15;
+const unsigned char MOTOR_REPORT = 0x95;
 
 class MotorBankModule : public Module {
  public:
@@ -32,6 +30,8 @@ class MotorBankModule : public Module {
   bool AcceptMessage(const Message &message) override;
 
   Motor* motor(const int i);
+
+  void Setup();
 
  private:
   tensixty::ArduinoInterface *arduino_;
