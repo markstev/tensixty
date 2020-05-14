@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='',
   syntax='proto2',
   serialized_options=None,
-  serialized_pb=b'\n\x13motor_command.proto\x1a\x0cnanopb.proto\"X\n\x0eMotorInitProto\x12\x0f\n\x07\x61\x64\x64ress\x18\x01 \x02(\x05\x12\x12\n\nenable_pin\x18\x02 \x02(\x05\x12\x0f\n\x07\x64ir_pin\x18\x03 \x02(\x05\x12\x10\n\x08step_pin\x18\x04 \x02(\x05\"\x82\x01\n\x0eMotorMoveProto\x12\x11\n\tmax_speed\x18\x01 \x02(\x02\x12\x11\n\tmin_speed\x18\x02 \x02(\x02\x12\x1c\n\x14\x64isable_after_moving\x18\x03 \x02(\x08\x12\x16\n\x0e\x61\x62solute_steps\x18\x04 \x02(\x05\x12\x14\n\x0c\x61\x63\x63\x65leration\x18\x05 \x02(\x02\"W\n\x10MotorConfigProto\x12\x0f\n\x07\x61\x64\x64ress\x18\x01 \x02(\x05\x12\x0c\n\x04zero\x18\x05 \x02(\x08\x12\x11\n\tmin_steps\x18\x06 \x02(\x05\x12\x11\n\tmax_steps\x18\x07 \x02(\x05\"A\n\x11MotorMoveAllProto\x12,\n\x06motors\x18\x01 \x03(\x0b\x32\x0f.MotorMoveProtoB\x0b\x92?\x02\x10\x06\x92?\x03\x80\x01\x01\"8\n\x0eMotorTareProto\x12\x0f\n\x07\x61\x64\x64ress\x18\x01 \x02(\x05\x12\x15\n\rtare_to_steps\x18\x02 \x02(\x05\"2\n\x10MotorReportProto\x12\x1e\n\x16\x63urrent_absolute_steps\x18\x01 \x02(\x05\"E\n\x13\x41llMotorReportProto\x12.\n\x06motors\x18\x01 \x03(\x0b\x32\x11.MotorReportProtoB\x0b\x92?\x02\x10\x06\x92?\x03\x80\x01\x01'
+  serialized_pb=b'\n\x13motor_command.proto\x1a\x0cnanopb.proto\"X\n\x0eMotorInitProto\x12\x0f\n\x07\x61\x64\x64ress\x18\x01 \x02(\x05\x12\x12\n\nenable_pin\x18\x02 \x02(\x05\x12\x0f\n\x07\x64ir_pin\x18\x03 \x02(\x05\x12\x10\n\x08step_pin\x18\x04 \x02(\x05\"\x82\x01\n\x0eMotorMoveProto\x12\x11\n\tmax_speed\x18\x01 \x02(\x02\x12\x11\n\tmin_speed\x18\x02 \x02(\x02\x12\x1c\n\x14\x64isable_after_moving\x18\x03 \x02(\x08\x12\x16\n\x0e\x61\x62solute_steps\x18\x04 \x02(\x05\x12\x14\n\x0c\x61\x63\x63\x65leration\x18\x05 \x02(\x02\"W\n\x10MotorConfigProto\x12\x0f\n\x07\x61\x64\x64ress\x18\x01 \x02(\x05\x12\x0c\n\x04zero\x18\x05 \x02(\x08\x12\x11\n\tmin_steps\x18\x06 \x02(\x05\x12\x11\n\tmax_steps\x18\x07 \x02(\x05\"A\n\x11MotorMoveAllProto\x12,\n\x06motors\x18\x01 \x03(\x0b\x32\x0f.MotorMoveProtoB\x0b\x92?\x02\x10\x06\x92?\x03\x80\x01\x01\"8\n\x0eMotorTareProto\x12\x0f\n\x07\x61\x64\x64ress\x18\x01 \x02(\x05\x12\x15\n\rtare_to_steps\x18\x02 \x02(\x05\"s\n\x10MotorReportProto\x12\x1e\n\x16\x63urrent_absolute_steps\x18\x01 \x02(\x05\x12\x14\n\x0c\x61\x63\x63\x65leration\x18\x02 \x02(\x02\x12\x15\n\rstep_progress\x18\x03 \x02(\x02\x12\x12\n\nstep_speed\x18\x04 \x02(\x02\"E\n\x13\x41llMotorReportProto\x12.\n\x06motors\x18\x01 \x03(\x0b\x32\x11.MotorReportProtoB\x0b\x92?\x02\x10\x06\x92?\x03\x80\x01\x01'
   ,
   dependencies=[nanopb__pb2.DESCRIPTOR,])
 
@@ -272,6 +272,27 @@ _MOTORREPORTPROTO = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='acceleration', full_name='MotorReportProto.acceleration', index=1,
+      number=2, type=2, cpp_type=6, label=2,
+      has_default_value=False, default_value=float(0),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='step_progress', full_name='MotorReportProto.step_progress', index=2,
+      number=3, type=2, cpp_type=6, label=2,
+      has_default_value=False, default_value=float(0),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='step_speed', full_name='MotorReportProto.step_speed', index=3,
+      number=4, type=2, cpp_type=6, label=2,
+      has_default_value=False, default_value=float(0),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -285,7 +306,7 @@ _MOTORREPORTPROTO = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=474,
-  serialized_end=524,
+  serialized_end=589,
 )
 
 
@@ -315,8 +336,8 @@ _ALLMOTORREPORTPROTO = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=526,
-  serialized_end=595,
+  serialized_start=591,
+  serialized_end=660,
 )
 
 _MOTORMOVEALLPROTO.fields_by_name['motors'].message_type = _MOTORMOVEPROTO

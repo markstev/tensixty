@@ -3,7 +3,7 @@
 
 #ifndef PB_MOTOR_COMMAND_PB_H_INCLUDED
 #define PB_MOTOR_COMMAND_PB_H_INCLUDED
-#include <pb.h>
+#include "pb.h"
 
 #if PB_PROTO_HEADER_VERSION != 40
 #error Regenerate this file with the current version of nanopb generator.
@@ -38,6 +38,9 @@ typedef struct _MotorMoveProto {
 
 typedef struct _MotorReportProto {
     int32_t current_absolute_steps;
+    float acceleration;
+    float step_progress;
+    float step_speed;
 } MotorReportProto;
 
 typedef struct _MotorTareProto {
@@ -60,14 +63,14 @@ typedef struct _MotorMoveAllProto {
 #define MotorConfigProto_init_default            {0, 0, 0, 0}
 #define MotorMoveAllProto_init_default           {{MotorMoveProto_init_default, MotorMoveProto_init_default, MotorMoveProto_init_default, MotorMoveProto_init_default, MotorMoveProto_init_default, MotorMoveProto_init_default}}
 #define MotorTareProto_init_default              {0, 0}
-#define MotorReportProto_init_default            {0}
+#define MotorReportProto_init_default            {0, 0, 0, 0}
 #define AllMotorReportProto_init_default         {{MotorReportProto_init_default, MotorReportProto_init_default, MotorReportProto_init_default, MotorReportProto_init_default, MotorReportProto_init_default, MotorReportProto_init_default}}
 #define MotorInitProto_init_zero                 {0, 0, 0, 0}
 #define MotorMoveProto_init_zero                 {0, 0, 0, 0, 0}
 #define MotorConfigProto_init_zero               {0, 0, 0, 0}
 #define MotorMoveAllProto_init_zero              {{MotorMoveProto_init_zero, MotorMoveProto_init_zero, MotorMoveProto_init_zero, MotorMoveProto_init_zero, MotorMoveProto_init_zero, MotorMoveProto_init_zero}}
 #define MotorTareProto_init_zero                 {0, 0}
-#define MotorReportProto_init_zero               {0}
+#define MotorReportProto_init_zero               {0, 0, 0, 0}
 #define AllMotorReportProto_init_zero            {{MotorReportProto_init_zero, MotorReportProto_init_zero, MotorReportProto_init_zero, MotorReportProto_init_zero, MotorReportProto_init_zero, MotorReportProto_init_zero}}
 
 /* Field tags (for use in manual encoding/decoding) */
@@ -85,6 +88,9 @@ typedef struct _MotorMoveAllProto {
 #define MotorMoveProto_absolute_steps_tag        4
 #define MotorMoveProto_acceleration_tag          5
 #define MotorReportProto_current_absolute_steps_tag 1
+#define MotorReportProto_acceleration_tag        2
+#define MotorReportProto_step_progress_tag       3
+#define MotorReportProto_step_speed_tag          4
 #define MotorTareProto_address_tag               1
 #define MotorTareProto_tare_to_steps_tag         2
 #define AllMotorReportProto_motors_tag           1
@@ -129,7 +135,10 @@ X(a, STATIC,   REQUIRED, INT32,    tare_to_steps,     2)
 #define MotorTareProto_DEFAULT NULL
 
 #define MotorReportProto_FIELDLIST(X, a) \
-X(a, STATIC,   REQUIRED, INT32,    current_absolute_steps,   1)
+X(a, STATIC,   REQUIRED, INT32,    current_absolute_steps,   1) \
+X(a, STATIC,   REQUIRED, FLOAT,    acceleration,      2) \
+X(a, STATIC,   REQUIRED, FLOAT,    step_progress,     3) \
+X(a, STATIC,   REQUIRED, FLOAT,    step_speed,        4)
 #define MotorReportProto_CALLBACK NULL
 #define MotorReportProto_DEFAULT NULL
 
@@ -162,8 +171,8 @@ extern const pb_msgdesc_t AllMotorReportProto_msg;
 #define MotorConfigProto_size                    35
 #define MotorMoveAllProto_size                   180
 #define MotorTareProto_size                      22
-#define MotorReportProto_size                    11
-#define AllMotorReportProto_size                 78
+#define MotorReportProto_size                    26
+#define AllMotorReportProto_size                 168
 
 #ifdef __cplusplus
 } /* extern "C" */
