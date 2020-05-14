@@ -35,6 +35,9 @@ class Motor {
   float speed() const { return step_speed_; }
 
   int32_t current_position() const { return current_absolute_steps_; }
+  float acceleration() const { return acceleration_; }
+  float step_progress() const { return step_progress_; }
+  float step_speed() const { return step_speed_; }
 
  private:
   void UpdateRamps();
@@ -46,9 +49,9 @@ class Motor {
 
   float min_speed_;
   float max_speed_;
-  float acceleration_;
-  float step_speed_;
-  float step_progress_;
+  volatile float acceleration_;
+  volatile float step_speed_;
+  volatile float step_progress_;
   int32_t start_slowdown_step_;
 
   bool disable_after_moving_;

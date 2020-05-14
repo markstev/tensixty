@@ -44,6 +44,9 @@ message MotorTareProto {
 
 message MotorReportProto {
   required int32 current_absolute_steps = 1;
+  required float acceleration = 2;
+  required float step_progress = 3;
+  required float step_speed = 4;
 }
 
 message AllMotorReportProto {

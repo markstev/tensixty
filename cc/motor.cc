@@ -57,7 +57,7 @@ void Motor::UpdateRamps() {
   step_speed_ = min_speed_;
   int decel_steps = max_speed_ * slowdown_time
     - acceleration_ / 2 * slowdown_time * slowdown_time;
-  printf("Steps needed to slow down: %d\n", decel_steps);
+  //printf("Steps needed to slow down: %d\n", decel_steps);
   // TODO: calc accel steps instead here
   decel_steps = Min(decel_steps, Abs(target_absolute_steps_ - current_absolute_steps_) / 2);
 
@@ -66,7 +66,7 @@ void Motor::UpdateRamps() {
   } else {
     start_slowdown_step_ = target_absolute_steps_ + decel_steps;
   }
-  printf("Slowdown step = %d\n", start_slowdown_step_);
+  //printf("Slowdown step = %d\n", start_slowdown_step_);
   step_progress_ = 0.0;
   if (target_absolute_steps_ == current_absolute_steps_) {
     step_speed_ = 0.0;
@@ -80,7 +80,7 @@ void Motor::UpdateRamps() {
 void Motor::Update(const MotorMoveProto &move_proto) {
   if (arduino_ == nullptr) return;
   target_absolute_steps_ = max(min_steps_, min(max_steps_, move_proto.absolute_steps));
-  printf("%d Move to %d\n", address(), target_absolute_steps_);
+  //printf("%d Move to %d\n", address(), target_absolute_steps_);
   min_speed_ = move_proto.min_speed;
   max_speed_ = move_proto.max_speed;
   acceleration_ = move_proto.acceleration;
@@ -100,7 +100,7 @@ void Motor::FastTick() {
   if (arduino_ == nullptr) {
     return;
   }
-  printf("Motor %d is at %d with target %d\n", address(), current_absolute_steps_, target_absolute_steps_);
+  //printf("Motor %d is at %d with target %d\n", address(), current_absolute_steps_, target_absolute_steps_);
   if (current_absolute_steps_ == target_absolute_steps_) {
     return;
   }

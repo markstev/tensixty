@@ -53,6 +53,9 @@ Message MotorBankModule::Tick() {
     AllMotorReportProto report = AllMotorReportProto_init_zero;
     for (int i = 0; i < NUM_MOTORS; ++i) {
       report.motors[i].current_absolute_steps = MOTORS[i].current_position();
+      report.motors[i].acceleration = MOTORS[i].acceleration();
+      report.motors[i].step_progress = MOTORS[i].step_progress();
+      report.motors[i].step_speed = MOTORS[i].step_speed();
     }
     int bytes_written;
     SERIALIZE(AllMotorReportProto, report, report_buffer_, bytes_written);
