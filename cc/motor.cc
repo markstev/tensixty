@@ -157,4 +157,24 @@ void Motor::Tare(const int32_t tare_to_steps) {
   MaybeDisableMotor();
 }
 
+void Motor::TareIf(const MotorTareIfProto &tare_if){
+  TareRule &tare_rule = tare_rules_[tare_if.tare_rule_index];
+  tare_rule.active = true;
+  tare_rule.tare_to_steps = tare_if.tare_to_steps;
+  tare_rule.match_mask = 0x01 << tare_if.pin_to_watch;
+  tare_rule.pin_state_to_match = tare_if.pin_state_to_match;
+}
+
+void Motor::MaybeTare(const int64_t pin_states_bitmap) {
+  for (const auto& tare_rule : tare_rules_) {
+    if (!tare_rule.active) continue;
+    const int64_t masked = pin_states_bitmap & tare_rule.match_mask;
+    const bool match = tare_rule.pin_state_to_match ?
+      masked != 0 : masked == 0;
+    if (match) {
+      Tare(tare_rule.tare_to_steps);
+    }
+  }
+}
+
 }  // namespace markbot

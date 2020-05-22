@@ -1,11 +1,18 @@
 #ifndef COM_GITHUB_MARKSTEV_MARKBOT_MOTOR_H_
 #define COM_GITHUB_MARKSTEV_MARKBOT_MOTOR_H_
 
-#include "motor_command.pb.h"
+#include "cc/motor_command.pb.h"
 #include <stdint.h>
 #include "arduino.h"
 
 namespace markbot {
+
+struct TareRule {
+  bool active = false;
+  int32_t tare_to_steps;
+  int64_t match_mask;
+  bool pin_state_to_match;
+};
 
 class Motor {
  public:
@@ -31,6 +38,8 @@ class Motor {
   void Config(const MotorConfigProto &config);
 
   void Tare(const int32_t tare_to_steps);
+  void TareIf(const MotorTareIfProto &tare_if);
+  void MaybeTare(const int64_t pin_states_bitmap);
 
   float speed() const { return step_speed_; }
 
@@ -60,6 +69,7 @@ class Motor {
   volatile int32_t current_absolute_steps_;
   volatile int32_t target_absolute_steps_;
   int32_t increment_ = 1;
+  TareRule tare_rules_[3];
 };
 
 }  // namespace markbot

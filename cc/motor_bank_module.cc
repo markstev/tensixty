@@ -1,4 +1,5 @@
 #include "motor_bank_module.h"
+#include "read_module.h"
 
 namespace markbot {
 Motor MOTORS[NUM_MOTORS];
@@ -88,6 +89,18 @@ bool MotorBankModule::AcceptMessage(const Message &message) {
     case MOTOR_TARE: {
       PARSE_OR_RETURN(MotorTareProto, tare_proto, message.data(), message.length());
       MOTORS[tare_proto.address].Tare(tare_proto.tare_to_steps);
+      break;
+    }
+    case MOTOR_TARE_IF: {
+      PARSE_OR_RETURN(MotorTareIfProto, tare_proto, message.data(), message.length());
+      MOTORS[tare_proto.address].TareIf(tare_proto);
+      break;
+    }
+    case READ_REPORT: {
+      PARSE_OR_RETURN(IOReadProto, read_proto, message.data(), message.length());
+      for (int i = 0; i < NUM_MOTORS; ++i) {
+        MOTORS[i].MaybeTare(read_proto.pin_states_bitmap);
+      }
       break;
     }
     case MOTOR_REQUEST_REPORT: {

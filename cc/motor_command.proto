@@ -67,8 +67,9 @@ message IOReadProto {
 // If pin_to_watch reaches pin_state_to_match, the given motor is tared to tare_to_steps.
 message MotorTareIfProto {
   required int32 address = 1;
-  required int32 tare_to_steps = 2;
-  required int32 pin_to_watch = 3;
-  required bool pin_state_to_match = 4;
+  required int32 tare_rule_index = 2;
+  required int32 tare_to_steps = 3;
+  required uint32 pin_to_watch = 4;
+  required bool pin_state_to_match = 5;
 }
 

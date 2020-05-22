@@ -27,4 +27,13 @@ PB_BIND(MotorReportProto, MotorReportProto, AUTO)
 PB_BIND(AllMotorReportProto, AllMotorReportProto, AUTO)
 
 
+PB_BIND(IOReadRequestProto, IOReadRequestProto, AUTO)
+
+
+PB_BIND(IOReadProto, IOReadProto, AUTO)
+
+
+PB_BIND(MotorTareIfProto, MotorTareIfProto, AUTO)
+
+
 

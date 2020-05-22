@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='',
   syntax='proto2',
   serialized_options=None,
-  serialized_pb=b'\n\x13motor_command.proto\x1a\x0cnanopb.proto\"X\n\x0eMotorInitProto\x12\x0f\n\x07\x61\x64\x64ress\x18\x01 \x02(\x05\x12\x12\n\nenable_pin\x18\x02 \x02(\x05\x12\x0f\n\x07\x64ir_pin\x18\x03 \x02(\x05\x12\x10\n\x08step_pin\x18\x04 \x02(\x05\"\x82\x01\n\x0eMotorMoveProto\x12\x11\n\tmax_speed\x18\x01 \x02(\x02\x12\x11\n\tmin_speed\x18\x02 \x02(\x02\x12\x1c\n\x14\x64isable_after_moving\x18\x03 \x02(\x08\x12\x16\n\x0e\x61\x62solute_steps\x18\x04 \x02(\x05\x12\x14\n\x0c\x61\x63\x63\x65leration\x18\x05 \x02(\x02\"W\n\x10MotorConfigProto\x12\x0f\n\x07\x61\x64\x64ress\x18\x01 \x02(\x05\x12\x0c\n\x04zero\x18\x05 \x02(\x08\x12\x11\n\tmin_steps\x18\x06 \x02(\x05\x12\x11\n\tmax_steps\x18\x07 \x02(\x05\"A\n\x11MotorMoveAllProto\x12,\n\x06motors\x18\x01 \x03(\x0b\x32\x0f.MotorMoveProtoB\x0b\x92?\x02\x10\x06\x92?\x03\x80\x01\x01\"8\n\x0eMotorTareProto\x12\x0f\n\x07\x61\x64\x64ress\x18\x01 \x02(\x05\x12\x15\n\rtare_to_steps\x18\x02 \x02(\x05\"s\n\x10MotorReportProto\x12\x1e\n\x16\x63urrent_absolute_steps\x18\x01 \x02(\x05\x12\x14\n\x0c\x61\x63\x63\x65leration\x18\x02 \x02(\x02\x12\x15\n\rstep_progress\x18\x03 \x02(\x02\x12\x12\n\nstep_speed\x18\x04 \x02(\x02\"E\n\x13\x41llMotorReportProto\x12.\n\x06motors\x18\x01 \x03(\x0b\x32\x11.MotorReportProtoB\x0b\x92?\x02\x10\x06\x92?\x03\x80\x01\x01'
+  serialized_pb=b'\n\x13motor_command.proto\x1a\x0cnanopb.proto\"X\n\x0eMotorInitProto\x12\x0f\n\x07\x61\x64\x64ress\x18\x01 \x02(\x05\x12\x12\n\nenable_pin\x18\x02 \x02(\x05\x12\x0f\n\x07\x64ir_pin\x18\x03 \x02(\x05\x12\x10\n\x08step_pin\x18\x04 \x02(\x05\"\x82\x01\n\x0eMotorMoveProto\x12\x11\n\tmax_speed\x18\x01 \x02(\x02\x12\x11\n\tmin_speed\x18\x02 \x02(\x02\x12\x1c\n\x14\x64isable_after_moving\x18\x03 \x02(\x08\x12\x16\n\x0e\x61\x62solute_steps\x18\x04 \x02(\x05\x12\x14\n\x0c\x61\x63\x63\x65leration\x18\x05 \x02(\x02\"W\n\x10MotorConfigProto\x12\x0f\n\x07\x61\x64\x64ress\x18\x01 \x02(\x05\x12\x0c\n\x04zero\x18\x05 \x02(\x08\x12\x11\n\tmin_steps\x18\x06 \x02(\x05\x12\x11\n\tmax_steps\x18\x07 \x02(\x05\"A\n\x11MotorMoveAllProto\x12,\n\x06motors\x18\x01 \x03(\x0b\x32\x0f.MotorMoveProtoB\x0b\x92?\x02\x10\x06\x92?\x03\x80\x01\x01\"8\n\x0eMotorTareProto\x12\x0f\n\x07\x61\x64\x64ress\x18\x01 \x02(\x05\x12\x15\n\rtare_to_steps\x18\x02 \x02(\x05\"s\n\x10MotorReportProto\x12\x1e\n\x16\x63urrent_absolute_steps\x18\x01 \x02(\x05\x12\x14\n\x0c\x61\x63\x63\x65leration\x18\x02 \x02(\x02\x12\x15\n\rstep_progress\x18\x03 \x02(\x02\x12\x12\n\nstep_speed\x18\x04 \x02(\x02\"E\n\x13\x41llMotorReportProto\x12.\n\x06motors\x18\x01 \x03(\x0b\x32\x11.MotorReportProtoB\x0b\x92?\x02\x10\x06\x92?\x03\x80\x01\x01\"I\n\x12IOReadRequestProto\x12\x18\n\x10input_pin_bitmap\x18\x01 \x02(\x03\x12\x19\n\x11pullup_pin_bitmap\x18\x02 \x02(\x03\"(\n\x0bIOReadProto\x12\x19\n\x11pin_states_bitmap\x18\x01 \x02(\x03\"\x85\x01\n\x10MotorTareIfProto\x12\x0f\n\x07\x61\x64\x64ress\x18\x01 \x02(\x05\x12\x17\n\x0ftare_rule_index\x18\x02 \x02(\x05\x12\x15\n\rtare_to_steps\x18\x03 \x02(\x05\x12\x14\n\x0cpin_to_watch\x18\x04 \x02(\r\x12\x1a\n\x12pin_state_to_match\x18\x05 \x02(\x08'
   ,
   dependencies=[nanopb__pb2.DESCRIPTOR,])
 
@@ -340,6 +340,134 @@ _ALLMOTORREPORTPROTO = _descriptor.Descriptor(
   serialized_end=660,
 )
 
+
+_IOREADREQUESTPROTO = _descriptor.Descriptor(
+  name='IOReadRequestProto',
+  full_name='IOReadRequestProto',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='input_pin_bitmap', full_name='IOReadRequestProto.input_pin_bitmap', index=0,
+      number=1, type=3, cpp_type=2, label=2,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='pullup_pin_bitmap', full_name='IOReadRequestProto.pullup_pin_bitmap', index=1,
+      number=2, type=3, cpp_type=2, label=2,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto2',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=662,
+  serialized_end=735,
+)
+
+
+_IOREADPROTO = _descriptor.Descriptor(
+  name='IOReadProto',
+  full_name='IOReadProto',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='pin_states_bitmap', full_name='IOReadProto.pin_states_bitmap', index=0,
+      number=1, type=3, cpp_type=2, label=2,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto2',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=737,
+  serialized_end=777,
+)
+
+
+_MOTORTAREIFPROTO = _descriptor.Descriptor(
+  name='MotorTareIfProto',
+  full_name='MotorTareIfProto',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='address', full_name='MotorTareIfProto.address', index=0,
+      number=1, type=5, cpp_type=1, label=2,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='tare_rule_index', full_name='MotorTareIfProto.tare_rule_index', index=1,
+      number=2, type=5, cpp_type=1, label=2,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='tare_to_steps', full_name='MotorTareIfProto.tare_to_steps', index=2,
+      number=3, type=5, cpp_type=1, label=2,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='pin_to_watch', full_name='MotorTareIfProto.pin_to_watch', index=3,
+      number=4, type=13, cpp_type=3, label=2,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='pin_state_to_match', full_name='MotorTareIfProto.pin_state_to_match', index=4,
+      number=5, type=8, cpp_type=7, label=2,
+      has_default_value=False, default_value=False,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto2',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=780,
+  serialized_end=913,
+)
+
 _MOTORMOVEALLPROTO.fields_by_name['motors'].message_type = _MOTORMOVEPROTO
 _ALLMOTORREPORTPROTO.fields_by_name['motors'].message_type = _MOTORREPORTPROTO
 DESCRIPTOR.message_types_by_name['MotorInitProto'] = _MOTORINITPROTO
@@ -349,6 +477,9 @@ DESCRIPTOR.message_types_by_name['MotorMoveAllProto'] = _MOTORMOVEALLPROTO
 DESCRIPTOR.message_types_by_name['MotorTareProto'] = _MOTORTAREPROTO
 DESCRIPTOR.message_types_by_name['MotorReportProto'] = _MOTORREPORTPROTO
 DESCRIPTOR.message_types_by_name['AllMotorReportProto'] = _ALLMOTORREPORTPROTO
+DESCRIPTOR.message_types_by_name['IOReadRequestProto'] = _IOREADREQUESTPROTO
+DESCRIPTOR.message_types_by_name['IOReadProto'] = _IOREADPROTO
+DESCRIPTOR.message_types_by_name['MotorTareIfProto'] = _MOTORTAREIFPROTO
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 MotorInitProto = _reflection.GeneratedProtocolMessageType('MotorInitProto', (_message.Message,), {
@@ -399,6 +530,27 @@ AllMotorReportProto = _reflection.GeneratedProtocolMessageType('AllMotorReportPr
   # @@protoc_insertion_point(class_scope:AllMotorReportProto)
   })
 _sym_db.RegisterMessage(AllMotorReportProto)
+
+IOReadRequestProto = _reflection.GeneratedProtocolMessageType('IOReadRequestProto', (_message.Message,), {
+  'DESCRIPTOR' : _IOREADREQUESTPROTO,
+  '__module__' : 'motor_command_pb2'
+  # @@protoc_insertion_point(class_scope:IOReadRequestProto)
+  })
+_sym_db.RegisterMessage(IOReadRequestProto)
+
+IOReadProto = _reflection.GeneratedProtocolMessageType('IOReadProto', (_message.Message,), {
+  'DESCRIPTOR' : _IOREADPROTO,
+  '__module__' : 'motor_command_pb2'
+  # @@protoc_insertion_point(class_scope:IOReadProto)
+  })
+_sym_db.RegisterMessage(IOReadProto)
+
+MotorTareIfProto = _reflection.GeneratedProtocolMessageType('MotorTareIfProto', (_message.Message,), {
+  'DESCRIPTOR' : _MOTORTAREIFPROTO,
+  '__module__' : 'motor_command_pb2'
+  # @@protoc_insertion_point(class_scope:MotorTareIfProto)
+  })
+_sym_db.RegisterMessage(MotorTareIfProto)
 
 
 _MOTORMOVEALLPROTO.fields_by_name['motors']._options = None

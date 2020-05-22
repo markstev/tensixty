@@ -54,6 +54,7 @@ cc_library(name = "motor_bank_module",
                ":module_dispatcher",
                ":motor",
                ":motor_command_proto",
+               ":read_module",
            ],
 )
 

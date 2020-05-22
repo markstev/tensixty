@@ -3,7 +3,7 @@
 
 #ifndef PB_MOTOR_COMMAND_PB_H_INCLUDED
 #define PB_MOTOR_COMMAND_PB_H_INCLUDED
-#include "pb.h"
+#include <pb.h>
 
 #if PB_PROTO_HEADER_VERSION != 40
 #error Regenerate this file with the current version of nanopb generator.
@@ -14,6 +14,15 @@ extern "C" {
 #endif
 
 /* Struct definitions */
+typedef struct _IOReadProto {
+    int64_t pin_states_bitmap;
+} IOReadProto;
+
+typedef struct _IOReadRequestProto {
+    int64_t input_pin_bitmap;
+    int64_t pullup_pin_bitmap;
+} IOReadRequestProto;
+
 typedef struct _MotorConfigProto {
     int32_t address;
     bool zero;
@@ -43,6 +52,14 @@ typedef struct _MotorReportProto {
     float step_speed;
 } MotorReportProto;
 
+typedef struct _MotorTareIfProto {
+    int32_t address;
+    int32_t tare_rule_index;
+    int32_t tare_to_steps;
+    uint32_t pin_to_watch;
+    bool pin_state_to_match;
+} MotorTareIfProto;
+
 typedef struct _MotorTareProto {
     int32_t address;
     int32_t tare_to_steps;
@@ -65,6 +82,9 @@ typedef struct _MotorMoveAllProto {
 #define MotorTareProto_init_default              {0, 0}
 #define MotorReportProto_init_default            {0, 0, 0, 0}
 #define AllMotorReportProto_init_default         {{MotorReportProto_init_default, MotorReportProto_init_default, MotorReportProto_init_default, MotorReportProto_init_default, MotorReportProto_init_default, MotorReportProto_init_default}}
+#define IOReadRequestProto_init_default          {0, 0}
+#define IOReadProto_init_default                 {0}
+#define MotorTareIfProto_init_default            {0, 0, 0, 0, 0}
 #define MotorInitProto_init_zero                 {0, 0, 0, 0}
 #define MotorMoveProto_init_zero                 {0, 0, 0, 0, 0}
 #define MotorConfigProto_init_zero               {0, 0, 0, 0}
@@ -72,8 +92,14 @@ typedef struct _MotorMoveAllProto {
 #define MotorTareProto_init_zero                 {0, 0}
 #define MotorReportProto_init_zero               {0, 0, 0, 0}
 #define AllMotorReportProto_init_zero            {{MotorReportProto_init_zero, MotorReportProto_init_zero, MotorReportProto_init_zero, MotorReportProto_init_zero, MotorReportProto_init_zero, MotorReportProto_init_zero}}
+#define IOReadRequestProto_init_zero             {0, 0}
+#define IOReadProto_init_zero                    {0}
+#define MotorTareIfProto_init_zero               {0, 0, 0, 0, 0}
 
 /* Field tags (for use in manual encoding/decoding) */
+#define IOReadProto_pin_states_bitmap_tag        1
+#define IOReadRequestProto_input_pin_bitmap_tag  1
+#define IOReadRequestProto_pullup_pin_bitmap_tag 2
 #define MotorConfigProto_address_tag             1
 #define MotorConfigProto_zero_tag                5
 #define MotorConfigProto_min_steps_tag           6
@@ -91,6 +117,11 @@ typedef struct _MotorMoveAllProto {
 #define MotorReportProto_acceleration_tag        2
 #define MotorReportProto_step_progress_tag       3
 #define MotorReportProto_step_speed_tag          4
+#define MotorTareIfProto_address_tag             1
+#define MotorTareIfProto_tare_rule_index_tag     2
+#define MotorTareIfProto_tare_to_steps_tag       3
+#define MotorTareIfProto_pin_to_watch_tag        4
+#define MotorTareIfProto_pin_state_to_match_tag  5
 #define MotorTareProto_address_tag               1
 #define MotorTareProto_tare_to_steps_tag         2
 #define AllMotorReportProto_motors_tag           1
@@ -148,6 +179,26 @@ X(a, STATIC,   FIXARRAY, MESSAGE,  motors,            1)
 #define AllMotorReportProto_DEFAULT NULL
 #define AllMotorReportProto_motors_MSGTYPE MotorReportProto
 
+#define IOReadRequestProto_FIELDLIST(X, a) \
+X(a, STATIC,   REQUIRED, INT64,    input_pin_bitmap,   1) \
+X(a, STATIC,   REQUIRED, INT64,    pullup_pin_bitmap,   2)
+#define IOReadRequestProto_CALLBACK NULL
+#define IOReadRequestProto_DEFAULT NULL
+
+#define IOReadProto_FIELDLIST(X, a) \
+X(a, STATIC,   REQUIRED, INT64,    pin_states_bitmap,   1)
+#define IOReadProto_CALLBACK NULL
+#define IOReadProto_DEFAULT NULL
+
+#define MotorTareIfProto_FIELDLIST(X, a) \
+X(a, STATIC,   REQUIRED, INT32,    address,           1) \
+X(a, STATIC,   REQUIRED, INT32,    tare_rule_index,   2) \
+X(a, STATIC,   REQUIRED, INT32,    tare_to_steps,     3) \
+X(a, STATIC,   REQUIRED, UINT32,   pin_to_watch,      4) \
+X(a, STATIC,   REQUIRED, BOOL,     pin_state_to_match,   5)
+#define MotorTareIfProto_CALLBACK NULL
+#define MotorTareIfProto_DEFAULT NULL
+
 extern const pb_msgdesc_t MotorInitProto_msg;
 extern const pb_msgdesc_t MotorMoveProto_msg;
 extern const pb_msgdesc_t MotorConfigProto_msg;
@@ -155,6 +206,9 @@ extern const pb_msgdesc_t MotorMoveAllProto_msg;
 extern const pb_msgdesc_t MotorTareProto_msg;
 extern const pb_msgdesc_t MotorReportProto_msg;
 extern const pb_msgdesc_t AllMotorReportProto_msg;
+extern const pb_msgdesc_t IOReadRequestProto_msg;
+extern const pb_msgdesc_t IOReadProto_msg;
+extern const pb_msgdesc_t MotorTareIfProto_msg;
 
 /* Defines for backwards compatibility with code written before nanopb-0.4.0 */
 #define MotorInitProto_fields &MotorInitProto_msg
@@ -164,6 +218,9 @@ extern const pb_msgdesc_t AllMotorReportProto_msg;
 #define MotorTareProto_fields &MotorTareProto_msg
 #define MotorReportProto_fields &MotorReportProto_msg
 #define AllMotorReportProto_fields &AllMotorReportProto_msg
+#define IOReadRequestProto_fields &IOReadRequestProto_msg
+#define IOReadProto_fields &IOReadProto_msg
+#define MotorTareIfProto_fields &MotorTareIfProto_msg
 
 /* Maximum encoded size of messages (where known) */
 #define MotorInitProto_size                      44
@@ -173,6 +230,9 @@ extern const pb_msgdesc_t AllMotorReportProto_msg;
 #define MotorTareProto_size                      22
 #define MotorReportProto_size                    26
 #define AllMotorReportProto_size                 168
+#define IOReadRequestProto_size                  22
+#define IOReadProto_size                         11
+#define MotorTareIfProto_size                    41
 
 #ifdef __cplusplus
 } /* extern "C" */

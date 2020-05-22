@@ -17,6 +17,7 @@ const unsigned char MOTOR_CONFIG = 0x11;
 const unsigned char MOTOR_MOVE = 0x12;
 const unsigned char MOTOR_TARE = 0x13;
 const unsigned char MOTOR_REQUEST_REPORT = 0x14;
+const unsigned char MOTOR_TARE_IF = 0x15;
 const unsigned char MOTOR_REPORT = 0x95;
 
 class MotorBankModule : public Module {

@@ -448,5 +448,50 @@ TEST(MotorTest, DisableAfterMoving) {
   EXPECT_EQ(arduino.testGetPinOutput(ENABLE_PIN), true);
 }
 
+TEST(MotorTest, TareIf) {
+  tensixty::FakeArduino arduino;
+  Motor motor;
+  InitMotor(arduino, &motor);
+  Configure(&motor);
+  EXPECT_EQ(motor.current_position(), 0);
+  MotorTareIfProto tare_if;
+  tare_if.address = 0;
+  tare_if.tare_rule_index = 0;
+  tare_if.tare_to_steps = -42;
+  tare_if.pin_to_watch = 3;
+  tare_if.pin_state_to_match = true;
+  motor.TareIf(tare_if);
+  EXPECT_EQ(motor.current_position(), 0);
+  motor.MaybeTare(0x00);
+  EXPECT_EQ(motor.current_position(), 0);
+  motor.MaybeTare(0x01);
+  EXPECT_EQ(motor.current_position(), 0);
+  motor.MaybeTare(0x08);
+  EXPECT_EQ(motor.current_position(), -42);
+  EXPECT_EQ(motor.StepsRemaining(), 42);
+
+  // Try matching a low pin
+  tare_if.pin_state_to_match = false;
+  tare_if.tare_to_steps = 99;
+  motor.TareIf(tare_if);
+  motor.MaybeTare(0xFF);
+  EXPECT_EQ(motor.current_position(), -42);
+  motor.MaybeTare(0xF7);
+  EXPECT_EQ(motor.current_position(), 99);
+  EXPECT_EQ(motor.StepsRemaining(), 99);
+
+  // Try adding another tare
+  tare_if.tare_rule_index = 1;
+  tare_if.pin_to_watch = 4;
+  tare_if.pin_state_to_match = true;
+  tare_if.tare_to_steps = -3;
+  motor.TareIf(tare_if);
+  motor.MaybeTare(0x08);
+  EXPECT_EQ(motor.current_position(), 99);
+  motor.MaybeTare(0x18);
+  EXPECT_EQ(motor.current_position(), -3);
+  EXPECT_EQ(motor.StepsRemaining(), 3);
+}
+
 }  // namespace
 }  // namespace markbot
