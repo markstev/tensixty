@@ -3,11 +3,9 @@
 
 #include <stdio.h>
 #include <string.h>
-#include "pb_decode.h"
-#include "pb_encode.h"
 
 #include "module_dispatcher.h"
-#include "motor_command.pb.h"
+#include "cc/motor_command.pb.h"
 #include "motor.h"
 
 namespace markbot {
@@ -37,7 +35,7 @@ class MotorBankModule : public Module {
   tensixty::ArduinoInterface *arduino_;
   // If true, compile and send a report on the next tick.
   bool request_report_;
-  uint8_t report_buffer_[40];
+  uint8_t report_buffer_[160];
 };
 
 }  // namespace markbot

@@ -19,11 +19,13 @@ cc_library(name = "interfaces",
                "arduino.h",
                "clock_interface.h",
                "serial_interface.h",
-           ])
+           ],
+           )
 
 cc_library(name = "module_dispatcher",
            srcs = ["module_dispatcher.cc"],
            hdrs = ["module_dispatcher.h"],
+		deps = ["@com_github_nanopb_nanopb//:nanopb"],
 )
 
 cc_library(name = "serial_module",
@@ -55,13 +57,23 @@ cc_library(name = "motor_bank_module",
            ],
 )
 
+cc_library(name = "read_module",
+           srcs = ["read_module.cc"],
+           hdrs = ["read_module.h"],
+           deps = [
+               ":interfaces",
+               ":module_dispatcher",
+               ":motor_command_proto",
+         ],
+)
+
 genrule(
 		name = "motor_command_generator",
 		srcs = ["motor_command.proto"],
 		outs = ["_motor_command.pb.h",
 						"_motor_command.pb.c"],
 		cmd = "python3 /Users/mark/nanopb/generator/nanopb_generator.py $(location motor_command.proto) \
-				&& echo yolo && which sed && sed 's/#include <pb.h>/#include \"pb.h\"/' cc/motor_command.pb.h \
+				&& sed 's/#include <pb.h>/#include \"pb.h\"/' cc/motor_command.pb.h \
         > $(location _motor_command.pb.h) \
 				&& cp cc/motor_command.pb.c $(location _motor_command.pb.c)",
 )
@@ -82,6 +94,8 @@ genrule(
 
 cc_library(
 		name = "motor_command_proto",
+    #hdrs = ["motor_command.pb.h"],
+    #srcs = ["motor_command.pb.c"],
 		srcs = [":motor_command_generator_c"],
 		hdrs = [":motor_command_generator_h"],
 		deps = ["@com_github_nanopb_nanopb//:nanopb"],

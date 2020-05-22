@@ -119,7 +119,7 @@ void FakeArduino::setPinModeInput(unsigned int pin) {
   pin_modes_[pin] = INPUT;
 }
 void FakeArduino::setPinModePullup(unsigned int pin) {
-  pin_modes_[pin] = INPUT;
+  pin_modes_[pin] = PULLUP;
 }
 
 void FakeArduino::digitalWrite(const unsigned int pin, bool value) {

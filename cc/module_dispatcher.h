@@ -1,6 +1,9 @@
 #ifndef MARKBOT_MODULE_DISPATCHER_H_
 #define MARKBOT_MODULE_DISPATCHER_H_
 
+#include "pb_decode.h"
+#include "pb_encode.h"
+
 namespace markbot {
 
 class Message {

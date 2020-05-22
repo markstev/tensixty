@@ -58,3 +58,7 @@ Data
 -------- How to regenerate the python proto file --------
 
 protoc --proto_path=../cc --python_out=. motor_command.proto --proto_path=/path/to/nanopb/generator/proto
+
+-------- For python support --------
+pip3 install google
+pip3 install protobuf

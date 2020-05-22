@@ -24,8 +24,9 @@ class FakeClock : public Clock {
 FakeClock* GetFakeClock();
 Clock* GetRealClock();
 
-static const bool OUTPUT = true;
-static const bool INPUT = false;
+static const int OUTPUT = 0;
+static const int INPUT = 1;
+static const int PULLUP = 2;
 
 class FakeArduino : public ArduinoInterface {
  public:
@@ -45,6 +46,7 @@ class FakeArduino : public ArduinoInterface {
   bool testGetPinOutput(unsigned int pin) { return pin_states_[pin]; }
   void testSetPinInput(unsigned int pin, bool high) { pin_states_[pin] = high; }
   bool testIsPinOutput(unsigned int pin) { return pin_modes_[pin] == OUTPUT; }
+  bool testIsPinPullup(unsigned int pin) { return pin_modes_[pin] == PULLUP; }
 
   bool UseFiles(const char *incoming, const char *outgoing);
 
@@ -59,7 +61,7 @@ class FakeArduino : public ArduinoInterface {
   FILE *outgoing_file_ = nullptr;
   int next_byte_ = EOF;
   std::map<const unsigned int, bool> pin_states_;
-  std::map<const unsigned int, bool> pin_modes_;
+  std::map<const unsigned int, int> pin_modes_;
   bool muted_ = false;
 };
 

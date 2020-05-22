@@ -52,3 +52,23 @@ message MotorReportProto {
 message AllMotorReportProto {
   repeated MotorReportProto motors = 1 [(nanopb).max_count = 6, (nanopb).fixed_count = true];
 }
+
+// Indicates pins to read from. Does not disable unset pins; once set to input, that's what a pin does. 
+// pullup supercedes input if both are set.
+message IOReadRequestProto {
+  required int64 input_pin_bitmap = 1;
+  required int64 pullup_pin_bitmap = 2;
+}
+
+message IOReadProto {
+  required int64 pin_states_bitmap = 1;
+}
+
+// If pin_to_watch reaches pin_state_to_match, the given motor is tared to tare_to_steps.
+message MotorTareIfProto {
+  required int32 address = 1;
+  required int32 tare_to_steps = 2;
+  required int32 pin_to_watch = 3;
+  required bool pin_state_to_match = 4;
+}
+
