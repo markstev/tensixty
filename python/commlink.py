@@ -4,7 +4,7 @@ from collections import namedtuple, deque
 from queue import Queue, Empty
 import time
 
-LOGGING_ON = True
+LOGGING_ON = False
 
 def Checksum(ints):
   first_sum = 0
@@ -404,6 +404,10 @@ class RXThread(Thread, Loggable):
     def WriteMessage(self, command):
         self.tx_queue.put(command)
         self.messages_requested += 1
+
+    def SendProto(self, type, message):
+        serialized = [type] + list(message.SerializeToString())
+        self.WriteMessage(serialized)
 
     def ReadMessage(self, timeout):
         try:
