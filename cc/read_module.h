@@ -20,6 +20,7 @@ class ReadModule : public Module {
   int64_t pin_states_;
   int64_t pins_to_read_bitmap_;
   uint8_t report_buffer_[16];
+  bool force_send_message_;
 };
 
 }  // namespace markbot

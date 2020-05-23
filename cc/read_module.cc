@@ -3,7 +3,8 @@
 namespace markbot {
 
 ReadModule::ReadModule(tensixty::ArduinoInterface *arduino)
-  : arduino_(arduino), pin_states_(0), pins_to_read_bitmap_(0) {}
+  : arduino_(arduino), pin_states_(0), pins_to_read_bitmap_(0),
+  force_send_message_(false) {}
 
 Message ReadModule::Tick() {
   const int64_t old_state = pin_states_;
@@ -18,7 +19,7 @@ Message ReadModule::Tick() {
       }
     }
   }
-  if (pin_states_ == old_state) {
+  if (pin_states_ == old_state && !force_send_message_) {
     return Message(0, nullptr);
   }
   IOReadProto read = IOReadProto_init_zero;
@@ -45,6 +46,7 @@ bool ReadModule::AcceptMessage(const Message &message) {
           pins_to_read_bitmap_ |= mask;
         }
       }
+      force_send_message_ = true;
       return true;
     }
     default:
