@@ -104,9 +104,6 @@ void Motor::FastTick() {
   if (current_absolute_steps_ == target_absolute_steps_) {
     return;
   }
-  if (current_absolute_steps_ == start_slowdown_step_) {
-    acceleration_ = -acceleration_;
-  }
   step_speed_ += acceleration_;
   if (step_speed_ > max_speed_) {
     step_speed_ = max_speed_;
@@ -115,11 +112,14 @@ void Motor::FastTick() {
   }
   step_progress_ += step_speed_;
   if (step_progress_ < 1.0) return;
-  step_progress_ -= 1.0;
+  // A full reset yields smoother movement.
+  step_progress_ = 0.0;
   Step();
   if (current_absolute_steps_ == target_absolute_steps_ &&
       disable_after_moving_) {
     arduino_->digitalWrite(init_proto_.enable_pin, true);
+  } else if (current_absolute_steps_ == start_slowdown_step_) {
+    acceleration_ = -acceleration_;
   }
 }
 
