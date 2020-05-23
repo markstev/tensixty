@@ -8,6 +8,10 @@
 namespace markbot {
 namespace {
 
+using tensixty::OUTPUT;
+using tensixty::INPUT;
+using tensixty::PULLUP;
+
 bool ParseResponse(const Message &response, IOReadProto *read_proto) {
   EXPECT_GT(response.length(), 1);
   EXPECT_EQ(response.type(), READ_REPORT);
@@ -42,11 +46,10 @@ TEST(ReadModule, ReadInput) {
   std::vector<int> input_pins = {1, 3, 8, 13};
   for (int i = 1; i < 64; ++i) {
     if (std::find(input_pins.begin(), input_pins.end(), i) == input_pins.end()) {
-      EXPECT_TRUE(arduino.testIsPinOutput(i)) << i;
+      EXPECT_EQ(arduino.testGetPinMode(i), OUTPUT) << i;
     } else {
-      EXPECT_FALSE(arduino.testIsPinOutput(i)) << i;
+      EXPECT_EQ(arduino.testGetPinMode(i), INPUT) << i;
     }
-    EXPECT_FALSE(arduino.testIsPinPullup(i)) << i;
   }
   arduino.testSetPinInput(3, true);
   arduino.testSetPinInput(9, false);
@@ -84,10 +87,9 @@ TEST(ReadModule, ReadPullup) {
   std::vector<int> pullup_pins = {1, 3, 8, 13};
   for (int i = 1; i < 64; ++i) {
     if (std::find(pullup_pins.begin(), pullup_pins.end(), i) == pullup_pins.end()) {
-      EXPECT_TRUE(arduino.testIsPinOutput(i)) << i;
+      EXPECT_EQ(arduino.testGetPinMode(i), OUTPUT) << i;
     } else {
-      EXPECT_FALSE(arduino.testIsPinOutput(i)) << i;
-      EXPECT_TRUE(arduino.testIsPinPullup(i)) << i;
+      EXPECT_EQ(arduino.testGetPinMode(i), PULLUP) << i;
     }
   }
 
@@ -100,14 +102,11 @@ TEST(ReadModule, ReadPullup) {
   std::vector<int> input_pins = {21, 22, 23};
   for (int i = 1; i < 64; ++i) {
     if (std::find(pullup_pins.begin(), pullup_pins.end(), i) != pullup_pins.end()) {
-      EXPECT_TRUE(arduino.testIsPinPullup(i)) << i;
-      EXPECT_FALSE(arduino.testIsPinOutput(i)) << i;
+      EXPECT_EQ(arduino.testGetPinMode(i), PULLUP) << i;
     } else if (std::find(input_pins.begin(), input_pins.end(), i) != input_pins.end()) {
-      EXPECT_FALSE(arduino.testIsPinPullup(i)) << i;
-      EXPECT_FALSE(arduino.testIsPinOutput(i)) << i;
+      EXPECT_EQ(arduino.testGetPinMode(i), INPUT) << i;
     } else {
-      EXPECT_FALSE(arduino.testIsPinPullup(i)) << i;
-      EXPECT_TRUE(arduino.testIsPinOutput(i)) << i;
+      EXPECT_EQ(arduino.testGetPinMode(i), OUTPUT) << i;
     }
   }
 }

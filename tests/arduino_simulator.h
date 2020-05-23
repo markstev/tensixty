@@ -45,8 +45,7 @@ class FakeArduino : public ArduinoInterface {
 
   bool testGetPinOutput(unsigned int pin) { return pin_states_[pin]; }
   void testSetPinInput(unsigned int pin, bool high) { pin_states_[pin] = high; }
-  bool testIsPinOutput(unsigned int pin) { return pin_modes_[pin] == OUTPUT; }
-  bool testIsPinPullup(unsigned int pin) { return pin_modes_[pin] == PULLUP; }
+  int testGetPinMode(unsigned int pin) { return pin_modes_[pin]; }
 
   bool UseFiles(const char *incoming, const char *outgoing);
 

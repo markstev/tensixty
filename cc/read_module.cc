@@ -29,6 +29,7 @@ Message ReadModule::Tick() {
   if (bytes_written == 0) {
     return Message(0, nullptr);
   }
+  force_send_message_ = false;
   return Message(READ_REPORT, bytes_written, report_buffer_);
 }
 

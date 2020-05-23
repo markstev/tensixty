@@ -30,9 +30,9 @@ TEST(HardwareAbstractionTest, digitalWriteSomePins2) {
 TEST(HardwareAbstractionTest, pinModes) {
   FakeArduino arduino;
   arduino.setPinModeOutput(17);
-  EXPECT_EQ(arduino.testIsPinOutput(17), OUTPUT);
+  EXPECT_EQ(arduino.testGetPinMode(17), OUTPUT);
   arduino.setPinModeInput(17);
-  EXPECT_EQ(arduino.testIsPinOutput(17), INPUT);
+  EXPECT_EQ(arduino.testGetPinMode(17), INPUT);
   arduino.testSetPinInput(17, true);
   EXPECT_EQ(arduino.digitalRead(17), true);
   arduino.testSetPinInput(17, false);
