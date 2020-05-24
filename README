@@ -44,16 +44,23 @@ Header
     name. This simplifies implementations.
   - One "ack" byte, consisting of a MSB, which indicates "error" if high and
     "ok" if low. The remaining 7 bits encode a transmission index from 1 to 127.
-    If the index is zero, that means nothing is acked. Throughout
-  - One byte for the index currently being sent, or 0 for no data.
+    If the index is zero, that means nothing is acked.
+  - One byte for the index currently being sent, or 0 for no data. The MSB in this byte indicates "start sequence," and is required to initialize a connection. See below.
   - One byte for the length of the data segment, meaning the data can be up to
-    256 bytes long.
+    255 bytes long.
   - Two checksum bytes to verify integrity of the header. These are a fletcher
     checksum of the previous five bytes.
 Data
-  - A length of N (up to 256) bytes being delivered.
+  - A length of N (up to 255) bytes being delivered.
   - Two checksum bytes on the previous N data bytes (not header) to verify
     integrity of the data block.
+
+Initialization:
+Until a packet indicating "start sequence" is received, all incoming data
+is discarded. A transmitter may not start sending data until its
+"start sequence" has been acknowledged. This should be done on an index of
+zero, thus otherwise sending no data. For such initialization, we will send
+a special ack of error-zero.
 
 -------- How to regenerate the python proto file --------
 

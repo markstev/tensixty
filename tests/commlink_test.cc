@@ -159,6 +159,17 @@ void WritePacketHeaderError(const Ack &ack, const unsigned char index, const uns
   WritePacketError(ack, index, error_index, 200, s);
 }
 
+TEST(ReaderTest, IgnoreUntilInitialization) {
+}
+
+void Initialize(FakeArduino *write_path, Reader *reader) {
+  WritePacket(Ack(0x00), 0x80, write_path);
+  while (reader->Read());
+  EXPECT_EQ(reader->PopPacket(), nullptr);
+  const Ack starting_ack = reader->PopIncomingAck();
+  EXPECT_TRUE(starting_ack.is_start_sequence_ack());
+}
+
 TEST(ReaderTest, ReadOnePacket) {
   FakeArduino s0, s1;
   ASSERT_TRUE(s0.UseFiles("/tmp/read_one_packet_a", "/tmp/read_one_packet_b"));
@@ -166,6 +177,7 @@ TEST(ReaderTest, ReadOnePacket) {
   Reader reader(&s1);
   EXPECT_FALSE(reader.Read());
   EXPECT_FALSE(reader.Read());
+  Initialize(&s0, &reader);
   WritePacket(Ack(0x72), 1, &s0);
   while (reader.Read());
   Packet *popped = reader.PopPacket();
@@ -185,6 +197,7 @@ TEST(ReaderTest, SendErrorForValidPacketBadIndex) {
   ASSERT_TRUE(s1.UseFiles("/tmp/bad_index_b", "/tmp/bad_index_a"));
   Reader reader(&s1);
   EXPECT_FALSE(reader.Read());
+  Initialize(&s0, &reader);
   WritePacket(Ack(0x72), 7, &s0);
   while (reader.Read());
   Packet *popped = reader.PopPacket();
@@ -221,6 +234,7 @@ TEST(ReaderTest, IgnoreInvalidHeader) {
   Reader reader(&s1);
   EXPECT_FALSE(reader.Read());
   EXPECT_FALSE(reader.Read());
+  Initialize(&s0, &reader);
   for (int error_index = 0; error_index < 7; ++error_index) {
     WritePacketHeaderError(Ack(0x72), 1, error_index, &s0);
     while (reader.Read());
@@ -239,6 +253,7 @@ TEST(ReaderTest, HandleDuplicate1060) {
   Reader reader(&s1);
   EXPECT_FALSE(reader.Read());
   EXPECT_FALSE(reader.Read());
+  Initialize(&s0, &reader);
   // Write some initial junk, so we make sure it doesn't foul up the subsequent message.
   // TODO: Handle duplicate 1060's
   //s0.write(10);
@@ -264,6 +279,7 @@ TEST(ReaderTest, ReadMany) {
   Reader reader(&s1);
   EXPECT_FALSE(reader.Read());
   EXPECT_FALSE(reader.Read());
+  Initialize(&s0, &reader);
   for (int i = 0; i < 300; ++i) {
     WritePacket(Ack(0x72), ToIndex(i), &s0);
     while (reader.Read());
@@ -281,6 +297,7 @@ TEST(ReaderTest, ReadMany) {
 
 TEST(OutgoingPacketBufferTest, AllocateUntilFull) {
   OutgoingPacketBuffer b;
+  b.MarkSequenceStarted();
   for (int i = 0; i < 10; ++i) {
     Packet *p = b.AllocatePacket();
     if (i < 4) {
@@ -293,6 +310,7 @@ TEST(OutgoingPacketBufferTest, AllocateUntilFull) {
 
 TEST(OutgoingPacketBufferTest, NothingToResend) {
   OutgoingPacketBuffer b;
+  b.MarkSequenceStarted();
   for (int i = 0; i < 10; ++i) {
     Packet *p = b.AllocatePacket();
     if (i < 4) {
@@ -305,6 +323,7 @@ TEST(OutgoingPacketBufferTest, NothingToResend) {
 
 TEST(OutgoingPacketBufferTest, NextPacket) {
   OutgoingPacketBuffer b;
+  b.MarkSequenceStarted();
   for (int i = 0; i < 10; ++i) {
     Packet *p = b.AllocatePacket();
     if (i < 4) {
@@ -320,6 +339,7 @@ TEST(OutgoingPacketBufferTest, NextPacket) {
 
 TEST(OutgoingPacketBufferTest, RemovePacket) {
   OutgoingPacketBuffer b;
+  b.MarkSequenceStarted();
   for (int i = 0; i < 4; ++i) {
     Packet *p = b.AllocatePacket();
     FillPacket(Ack(0x72), i + 1, p);
@@ -334,6 +354,7 @@ TEST(OutgoingPacketBufferTest, RemovePacket) {
 
 TEST(OutgoingPacketBufferTest, PeekPacket) {
   OutgoingPacketBuffer b;
+  b.MarkSequenceStarted();
   for (int i = 0; i < 4; ++i) {
     Packet *p = b.AllocatePacket();
     FillPacket(Ack(0x72), i + 1, p);
@@ -359,6 +380,7 @@ TEST(OutgoingPacketBufferTest, PeekPacket) {
 
 TEST(OutgoingPacketBufferTest, RemoveOutOfOrderMakesResends) {
   OutgoingPacketBuffer b;
+  b.MarkSequenceStarted();
   for (int i = 0; i < 4; ++i) {
     Packet *p = b.AllocatePacket();
     FillPacket(Ack(0x72), i + 1, p);
@@ -375,6 +397,7 @@ TEST(OutgoingPacketBufferTest, RemoveOutOfOrderMakesResends) {
 
 TEST(OutgoingPacketBufferTest, AddRemovePacketLoop) {
   OutgoingPacketBuffer b;
+  b.MarkSequenceStarted();
   for (int i = 0; i < 300; ++i) {
     printf("Trial %d\n", i);
     Packet *p = b.AllocatePacket();
@@ -389,6 +412,7 @@ TEST(OutgoingPacketBufferTest, AddRemovePacketLoop) {
 TEST(OutgoingPacketBufferTest, AddRemovePacketLoopWithBuffer) {
   for (int gap = 1; gap < 4; ++gap) {
     OutgoingPacketBuffer b;
+    b.MarkSequenceStarted();
     for (int i = 0; i < 300; ++i) {
       printf("Trial %d\n", i);
       Packet *p = b.AllocatePacket();
@@ -435,6 +459,22 @@ TEST(WriterTest, AddToOutgoingQueue) {
   ASSERT_TRUE(s0.UseFiles("/tmp/writer_add_outgoing_a", "/tmp/writer_add_outgoing_b"));
   ASSERT_TRUE(s1.UseFiles("/tmp/writer_add_outgoing_b", "/tmp/writer_add_outgoing_a"));
   Writer writer(*GetRealClock(), &s1, &reader);
+  writer.Write();
+  for (int i = 0; i < 10; ++i) {
+    const unsigned char data[3] = {4, 9, 17};
+    EXPECT_FALSE(writer.AddToOutgoingQueue(data, 3))
+      << "No enqueue before init.";
+  }
+  Reader real_reader(&s0);
+  while (real_reader.Read());
+  Packet *p = real_reader.PopPacket();
+  ASSERT_EQ(p, nullptr);
+  {
+    Ack start_sequence_ack;
+    start_sequence_ack.AckStartSequence();
+    reader.WithOutgoing(start_sequence_ack);
+    writer.Write();
+  }
   for (int i = 0; i < 10; ++i) {
     const unsigned char data[3] = {4, 9, 17};
     const bool added = writer.AddToOutgoingQueue(data, 3);
@@ -448,6 +488,13 @@ TEST(WriterTest, WriteOne) {
   ASSERT_TRUE(s0.UseFiles("/tmp/writer_write_one_a", "/tmp/writer_write_one_b"));
   ASSERT_TRUE(s1.UseFiles("/tmp/writer_write_one_b", "/tmp/writer_write_one_a"));
   Writer writer(*GetRealClock(), &s1, &reader);
+  {
+    writer.Write();
+    Ack start_sequence_ack;
+    start_sequence_ack.AckStartSequence();
+    reader.WithOutgoing(start_sequence_ack);
+    writer.Write();
+  }
   const unsigned char data[3] = {4, 9, 17};
   EXPECT_TRUE(writer.AddToOutgoingQueue(data, 3));
   EXPECT_TRUE(writer.Write());
@@ -482,6 +529,13 @@ TEST(WriterTest, WriteMany) {
   const unsigned char data[3] = {4, 9, 17};
   for (int ack_gap = 0; ack_gap < 3; ++ack_gap) {
     Writer writer(*GetRealClock(), &s1, &acker);
+    {
+      writer.Write();
+      Ack start_sequence_ack;
+      start_sequence_ack.AckStartSequence();
+      acker.WithOutgoing(start_sequence_ack);
+      writer.Write();
+    }
     Reader real_reader(&s0);
     for (int i = 0; i < 300; ++i) {
       printf("Trial %d\n", i);
@@ -522,11 +576,25 @@ TEST(WriterTest, Resend) {
   ASSERT_TRUE(s0.UseFiles("/tmp/writer_resend_a", "/tmp/writer_resend_b"));
   ASSERT_TRUE(s1.UseFiles("/tmp/writer_resend_b", "/tmp/writer_resend_a"));
   Writer writer(*GetRealClock(), &s1, &acker);
+  Reader real_reader(&s0);
+  {
+    writer.Write();
+
+    while (real_reader.Read());
+    Packet *p = real_reader.PopPacket();
+    ASSERT_EQ(p, nullptr);
+    const Ack starting_ack = real_reader.PopIncomingAck();
+    EXPECT_TRUE(starting_ack.is_start_sequence_ack());
+
+    Ack start_sequence_ack;
+    start_sequence_ack.AckStartSequence();
+    acker.WithOutgoing(start_sequence_ack);
+    writer.Write();
+  }
   const unsigned char data[3] = {4, 9, 17};
   EXPECT_TRUE(writer.AddToOutgoingQueue(data, 3));
   EXPECT_TRUE(writer.Write());
 
-  Reader real_reader(&s0);
   while (real_reader.Read());
   Packet *p = real_reader.PopPacket();
   ASSERT_NE(p, nullptr);
@@ -551,13 +619,6 @@ TEST(WriterTest, Resend) {
 
   acker.WithOutgoing(Ack(ToIndex(0) | 0x80));
   EXPECT_TRUE(writer.Write());
-  Reader real_reader2(&s0);
-  while (real_reader2.Read());
-  p = real_reader2.PopPacket();
-  ASSERT_NE(p, nullptr);
-  EXPECT_EQ(p->ack().index(), 0);
-  EXPECT_EQ(p->data(&length)[0], 4);
-  EXPECT_EQ(length, 3);
 }
 
 TEST(WriterTest, OutOfOrderTriggersResends) {
@@ -569,6 +630,20 @@ TEST(WriterTest, OutOfOrderTriggersResends) {
   for (int ack_gap = 0; ack_gap < 3; ++ack_gap) {
     Writer writer(*GetRealClock(), &s1, &acker);
     Reader real_reader(&s0);
+    {
+      writer.Write();
+
+      while (real_reader.Read());
+      Packet *p = real_reader.PopPacket();
+      ASSERT_EQ(p, nullptr);
+      const Ack starting_ack = real_reader.PopIncomingAck();
+      EXPECT_TRUE(starting_ack.is_start_sequence_ack());
+
+      Ack start_sequence_ack;
+      start_sequence_ack.AckStartSequence();
+      acker.WithOutgoing(start_sequence_ack);
+      writer.Write();
+    }
     const int num_trials = 300;
     for (int i = 0; i < num_trials; ++i) {
       printf("Trial %d\n", i);
@@ -624,9 +699,23 @@ TEST(WriterTest, SendAckOnly) {
   FakeArduino s0, s1;
   ASSERT_TRUE(s0.UseFiles("/tmp/writer_ack_only_a", "/tmp/writer_ack_only_b"));
   ASSERT_TRUE(s1.UseFiles("/tmp/writer_ack_only_b", "/tmp/writer_ack_only_a"));
-  acker.WithIncoming(Ack(0x71));
   Writer writer(*GetRealClock(), &s1, &acker);
   Reader reader(&s0);
+  {
+    writer.Write();
+
+    while (reader.Read());
+    Packet *p = reader.PopPacket();
+    ASSERT_EQ(p, nullptr);
+    const Ack starting_ack = reader.PopIncomingAck();
+    EXPECT_TRUE(starting_ack.is_start_sequence_ack());
+
+    Ack start_sequence_ack;
+    start_sequence_ack.AckStartSequence();
+    acker.WithOutgoing(start_sequence_ack);
+    writer.Write();
+  }
+  acker.WithIncoming(Ack(0x71));
   writer.Write();
   while (reader.Read());
   Packet *p = reader.PopPacket();

@@ -18,6 +18,8 @@ class PacketRingBuffer {
   bool full() const;
   // Pops the next packet, in order.
   Packet* PopPacket();
+  // Deletes all entries in the buffer.
+  void Clear();
  private:
   // Clears any packets left in an erroneous state as well as any packets too far
   // from the last_index_number_.
@@ -44,6 +46,7 @@ class OutgoingPacketBuffer {
   void MarkSent(unsigned char index);
   void MarkResend(unsigned char index);
   void MarkAllResend();
+  void MarkSequenceStarted();
  private:
   // Returns true if packet_index precedes sent_index.
   bool PrecedesIndex(unsigned char packet_index, unsigned char sent_index) const;
@@ -53,6 +56,7 @@ class OutgoingPacketBuffer {
   bool pending_indices_[BUFFER_SIZE];
   // Makes it easier to handle indices wrapping around.
   unsigned char earliest_sent_index_;
+  bool sequence_started_;
 };
 
 class AckProvider {
@@ -81,6 +85,7 @@ class Reader : public AckProvider {
   PacketRingBuffer buffer_;
   Ack incoming_ack_;
   Ack outgoing_ack_;
+  bool sequence_started_;
 };
 
 class Writer {
@@ -100,6 +105,7 @@ class Writer {
   AckProvider *reader_;
   unsigned char current_index_;
   unsigned long last_send_time_;
+  bool sequence_started_;
 };
 
 class RxTxPair {

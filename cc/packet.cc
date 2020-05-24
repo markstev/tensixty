@@ -35,6 +35,14 @@ bool Ack::ok() const {
   return !error();
 }
 
+void Ack::AckStartSequence() {
+  index_and_error_ = 0x80;
+}
+
+bool Ack::is_start_sequence_ack() const {
+  return index_and_error_ == 0x80;
+}
+
 const unsigned char Ack::Serialize() const {
   return index_and_error_;
 }
@@ -220,7 +228,9 @@ void Packet::IncludeAck(const Ack &ack) {
 void Packet::IncludeData(const unsigned char index, const unsigned char *data, const unsigned int data_length) {
   index_sending_ = index;
   data_length_ = data_length;
-  memcpy(data_, data, data_length * sizeof(unsigned char));
+  if (data_length_ > 0) {
+    memcpy(data_, data, data_length * sizeof(unsigned char));
+  }
 }
 
 void Packet::Serialize(unsigned char *header, unsigned char *data, unsigned int *data_bytes) const {
