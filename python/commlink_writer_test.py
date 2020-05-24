@@ -28,9 +28,30 @@ class CommlinkWriterTest(unittest.TestCase):
             buf.append(byte)
         return buf
 
+    def Initialize(self, writer):
+        initialized = False
+        for i in range(100):
+            # Might need to flush some old junk.
+            buf = self.ReadIntoBuffer()
+            p = Packet()
+            p.ParseFromIntStream(buf)
+            self.assertEqual(p.Parsed(), True, "Failed read %d" % i)
+            if not p.DataOk():
+                continue
+            if p.index_sending != 0x80:
+                continue
+            self.assertEqual(len(p.data), 0)
+            writer.Write(Ack(0, True), Ack(0x80, True), Queue(10))
+            initialized = True
+            break
+        self.assertTrue(initialized)
+
     def testWrite(self):
         logging.info("====== testWrite ======")
         writer = Writer(self.tx)
+        self.assertEqual(writer.sequence_started, False)
+        self.Initialize(writer)
+        self.assertEqual(writer.sequence_started, True)
         tx_queue = Queue(10)
         last_index = 0
         for i in range(1000):
@@ -49,6 +70,7 @@ class CommlinkWriterTest(unittest.TestCase):
     def testRetryWrite(self):
         logging.info("====== testRetryWrite ======")
         writer = Writer(self.tx)
+        self.Initialize(writer)
         tx_queue = Queue(10)
         last_index = 0
         for i in range(1000):
@@ -85,6 +107,7 @@ class CommlinkWriterTest(unittest.TestCase):
         # retry-known: if sender acks N, then retry N first. Messages are now flying out-of-order.
         # Ordered seems much simpler!
         writer = Writer(self.tx)
+        self.Initialize(writer)
         tx_queue = Queue(10)
         for i in range(1, 5):
             data = FakeData(i)
@@ -105,7 +128,9 @@ class CommlinkWriterTest(unittest.TestCase):
             writer.Write(Ack(42, True), Ack(0, False), tx_queue)
 
         # Same, but what if message #3 is okay
+        self.ReadIntoBuffer()
         writer = Writer(self.tx)
+        self.Initialize(writer)
         tx_queue = Queue(10)
         for i in range(1, 5):
             data = FakeData(i)
@@ -127,6 +152,7 @@ class CommlinkWriterTest(unittest.TestCase):
 
     def testAckOnlyWrites(self):
         writer = Writer(self.tx)
+        self.Initialize(writer)
         tx_queue = Queue(10)
         for ack in [True, False]:
             for i in range(4):

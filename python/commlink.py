@@ -48,6 +48,12 @@ class Packet(object):
         return AppendChecksum([10, 60, error_add + self.index_ack,
             self.index_sending, self.data_length]) + AppendChecksum(self.data)
 
+    def WithStartSequence(self):
+        return self.WithData(0x80, [])
+
+    def IsStartSequence(self):
+        return self.index_sending == 0x80
+
     def IncomingAck(self):
         return Ack(self.index_ack, not self.error)
 
@@ -66,6 +72,9 @@ class Packet(object):
                 # Got valid header
                 self.error = stream[i + 1] > 127
                 self.index_ack = stream[i + 1] % 128
+                if self.error and self.index_ack == 0:
+                    self.index_ack = 0x80
+                    self.error = False
                 self.index_sending = stream[i + 2]
                 self.data_length = stream[i + 3]
                 if data_start + self.data_length + 2 <= stream_length:
@@ -172,6 +181,7 @@ class Reader(Loggable):
         self.incoming_buffer = PacketRingBuffer()
         self.incoming_errors = 0
         self.outgoing_errors = 0
+        self.sequence_started = False
 
     def Read(self, rx_queue):
         self.ReadIntoBuffer()
@@ -181,6 +191,13 @@ class Reader(Loggable):
             self.bytes = packet.ParseFromIntStream(self.bytes)
             if packet.Parsed():
                 self.log("Parsed")
+                if packet.IsStartSequence():
+                    self.sequence_started = True
+                    self.incoming_ok.put(0x80)
+                    return
+                elif not self.sequence_started:
+                    self.log("Not initialized yet.")
+                    return
                 if packet.DataOk():
                     self.log("Data OK: %d, %s", packet.index_sending, packet.data)
                     self.incoming_ok.put(packet.index_sending)
@@ -258,6 +275,12 @@ class Ack(object):
         self.ok = ok
         self.error = not ok
 
+    def StartSequence():
+        return Ack(0x00, False)
+
+    def IsStartSequence(self):
+        return self.index == 0x80
+
     def __str__(self):
         if self.ok:
             message = "ok"
@@ -280,6 +303,9 @@ class Writer(Loggable):
         self.max_outgoing_length = 4
         self.last_send_time = time.time()
         self.all_quiet = True
+        self.sequence_started = False
+        packet = Packet().WithStartSequence()
+        self.TransmitPacket(packet)
 
     def done(self):
         if self.all_quiet:
@@ -291,11 +317,16 @@ class Writer(Loggable):
         if outgoing_ack.index != 0:
             self.all_quiet = False
             self.PopSentForAck(outgoing_ack)
+            if outgoing_ack.IsStartSequence():
+                self.sequence_started = True
         else:
             self.MaybeRetryAllSent()
         packet = Packet()
         packet.WithAck(incoming_ack.index, error=incoming_ack.error)
-        packet_type = self.AddPacketData(tx_queue, packet)
+        if self.sequence_started:
+            packet_type = self.AddPacketData(tx_queue, packet)
+        else:
+            packet_type = NO_PACKET
         if packet.index_sending != 0 or packet.index_ack != 0:
             self.TransmitPacket(packet)
         self.all_quiet = len(self.retry_queue) == 0 and len(self.sent_messages) == 0
