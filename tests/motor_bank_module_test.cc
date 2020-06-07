@@ -30,7 +30,7 @@ TEST(ModuleDispatcher, ConfigAndInit) {
     Message message(MOTOR_INIT, bytes_written, buffer);
     EXPECT_TRUE(motors.AcceptMessage(message));
     for (int i = 40; i < 43; ++i) {
-      EXPECT_EQ(arduino.testIsPinOutput(i), true);
+      EXPECT_EQ(arduino.testGetPinMode(i), tensixty::OUTPUT);
     }
   }
 
@@ -73,7 +73,7 @@ TEST(ModuleDispatcher, Tare) {
     Message message(MOTOR_INIT, bytes_written, buffer);
     EXPECT_TRUE(motors.AcceptMessage(message));
     for (int i = 40; i < 43; ++i) {
-      EXPECT_EQ(arduino.testIsPinOutput(i), true);
+      EXPECT_EQ(arduino.testGetPinMode(i), tensixty::OUTPUT);
     }
   }
 
@@ -142,7 +142,7 @@ TEST(ModuleDispatcher, Move) {
     Message message(MOTOR_INIT, bytes_written, buffer);
     EXPECT_TRUE(motors.AcceptMessage(message));
     for (int i = 40; i < 43; ++i) {
-      EXPECT_EQ(arduino.testIsPinOutput(i), true);
+      EXPECT_EQ(arduino.testGetPinMode(i), tensixty::OUTPUT);
     }
   }
 
