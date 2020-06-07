@@ -52,20 +52,39 @@ float Abs(const float x) {
 
 void Motor::UpdateRamps() {
   acceleration_ = abs(acceleration_);
-  // min_speed = max_speed - a * t
-  const int slowdown_time = (max_speed_ - min_speed_) / acceleration_;
   step_speed_ = min_speed_;
-  int decel_steps = max_speed_ * slowdown_time
-    - acceleration_ / 2 * slowdown_time * slowdown_time;
+  int decel_steps = Abs(target_absolute_steps_ - current_absolute_steps_) / 2;
+  {
+    // Simulate ramp times.
+    float sim_speed = step_speed_;
+    float step_progress = 0;
+    int steps = 0;
+    for (int ticks = 0; ticks < 1000000; ++ticks) {
+      if (sim_speed > 1.0) {
+        //printf("Found end of accel ramp at %d\n", steps);
+        if (steps < decel_steps) {
+          decel_steps = steps;
+        }
+        break;
+      }
+      sim_speed += acceleration_;
+      step_progress += sim_speed;
+      if (step_progress > 1.0) {
+        step_progress = 0;
+        ++steps;
+      }
+    }
+  }
+  // Handle rounding error.
+  decel_steps -= 1;
   //printf("Steps needed to slow down: %d\n", decel_steps);
-  // TODO: calc accel steps instead here
-  decel_steps = Min(decel_steps, Abs(target_absolute_steps_ - current_absolute_steps_) / 2);
 
   if (target_absolute_steps_ > current_absolute_steps_) {
     start_slowdown_step_ = target_absolute_steps_ - decel_steps;
   } else {
     start_slowdown_step_ = target_absolute_steps_ + decel_steps;
   }
+  //printf("Slowdown step: %d\n", start_slowdown_step_);
   //printf("Slowdown step = %d\n", start_slowdown_step_);
   step_progress_ = 0.0;
   if (target_absolute_steps_ == current_absolute_steps_) {
@@ -105,6 +124,7 @@ void Motor::FastTick() {
     return;
   }
   step_speed_ += acceleration_;
+  printf("Update step speed to %f.\n", step_speed_);
   if (step_speed_ > max_speed_) {
     step_speed_ = max_speed_;
   } else if (step_speed_ < min_speed_) {

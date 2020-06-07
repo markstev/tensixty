@@ -40,9 +40,9 @@ TEST(MotorTest, Step) {
   Configure(&motor);
   motor.FastTick();
   EXPECT_EQ(motor.StepsRemaining(), 0);
-  EXPECT_EQ(arduino.testIsPinOutput(ENABLE_PIN), true);
-  EXPECT_EQ(arduino.testIsPinOutput(DIR_PIN), true);
-  EXPECT_EQ(arduino.testIsPinOutput(STEP_PIN), true);
+  EXPECT_EQ(arduino.testGetPinMode(ENABLE_PIN), tensixty::OUTPUT);
+  EXPECT_EQ(arduino.testGetPinMode(DIR_PIN), tensixty::OUTPUT);
+  EXPECT_EQ(arduino.testGetPinMode(STEP_PIN), tensixty::OUTPUT);
   EXPECT_EQ(arduino.testGetPinOutput(ENABLE_PIN), true);
   {
     MotorMoveProto move_proto;
@@ -158,7 +158,7 @@ TEST(MotorTest, SpeedUpAtStart) {
     EXPECT_EQ(motor.StepsRemaining(), 9999);
   }
   motor.FastTick();
-  for (int i = 0; i < 13; ++i) {
+  for (int i = 0; i < 14; ++i) {
     motor.FastTick();
     EXPECT_EQ(motor.StepsRemaining(), 9998);
   }
@@ -195,7 +195,8 @@ TEST(MotorTest, ReachMaxSpeedAndSlowBackDown) {
     }
     motor.FastTick();
     if (motor.StepsRemaining()) {
-      EXPECT_GT(motor.speed(), 0.0);
+      ASSERT_GT(motor.speed(), 0.0) << "Zero speed with "
+        << motor.StepsRemaining() << " steps left.";
     }
     if (!reached_max_speed) {
       reached_max_speed = motor.speed() == 1.0;
@@ -272,7 +273,7 @@ TEST(MotorTest, TriangleRamp) {
     MotorMoveProto move_proto;
     move_proto.max_speed = 1.0;
     move_proto.min_speed = 0.0;
-    move_proto.acceleration = 0.01;
+    move_proto.acceleration = 0.005;
     move_proto.absolute_steps = 90;
     motor.Update(move_proto);
   }
@@ -289,9 +290,9 @@ TEST(MotorTest, TriangleRamp) {
       steps_at_max_speed = motor.StepsRemaining();
     }
   }
-  EXPECT_EQ(steps_at_max_speed, 45);
+  EXPECT_EQ(steps_at_max_speed, 44);
   EXPECT_EQ(motor.StepsRemaining(), 0);
-  EXPECT_LT(motor.speed(), 0.1);
+  EXPECT_LT(motor.speed(), 0.2);
 }
 
 TEST(MotorTest, TriangleRampNegative) {
@@ -303,7 +304,7 @@ TEST(MotorTest, TriangleRampNegative) {
     MotorMoveProto move_proto;
     move_proto.max_speed = 1.0;
     move_proto.min_speed = 0.0;
-    move_proto.acceleration = 0.01;
+    move_proto.acceleration = 0.005;
     move_proto.absolute_steps = -90;
     motor.Update(move_proto);
   }
@@ -320,9 +321,9 @@ TEST(MotorTest, TriangleRampNegative) {
       steps_at_max_speed = motor.StepsRemaining();
     }
   }
-  EXPECT_EQ(steps_at_max_speed, 45);
+  EXPECT_EQ(steps_at_max_speed, 44);
   EXPECT_EQ(motor.StepsRemaining(), 0);
-  EXPECT_LT(motor.speed(), 0.1);
+  EXPECT_LT(motor.speed(), 0.2);
 }
 
 TEST(MotorTest, TareWhileMoving) {
@@ -338,7 +339,7 @@ TEST(MotorTest, TareWhileMoving) {
     move_proto.absolute_steps = 90;
     motor.Update(move_proto);
   }
-  while (motor.StepsRemaining() > 40) {
+  while (motor.StepsRemaining() > 60) {
     motor.FastTick();
     EXPECT_LT(motor.speed(), 1.0);
     EXPECT_GT(motor.speed(), 0.0);
@@ -362,7 +363,7 @@ TEST(MotorTest, TareWhileMoving) {
     }
   }
   EXPECT_EQ(motor.StepsRemaining(), 0);
-  EXPECT_EQ(slowdown_step, 49);
+  EXPECT_EQ(slowdown_step, 35);
   EXPECT_LT(motor.speed(), 0.1);
   EXPECT_TRUE(reached_max_speed);
 }
@@ -380,7 +381,7 @@ TEST(MotorTest, TareWhileMovingStop) {
     move_proto.absolute_steps = 90;
     motor.Update(move_proto);
   }
-  while (motor.StepsRemaining() > 40) {
+  while (motor.StepsRemaining() > 60) {
     motor.FastTick();
     EXPECT_LT(motor.speed(), 1.0);
     EXPECT_GT(motor.speed(), 0.0);
@@ -406,7 +407,7 @@ TEST(MotorTest, TareReverse) {
     motor.Update(move_proto);
   }
   EXPECT_TRUE(motor.Direction());
-  while (motor.StepsRemaining() > 40) {
+  while (motor.StepsRemaining() > 60) {
     motor.FastTick();
     EXPECT_LT(motor.speed(), 1.0);
     EXPECT_GT(motor.speed(), 0.0);
@@ -419,9 +420,9 @@ TEST(MotorTest, TareReverse) {
   while (motor.StepsRemaining() > 0) {
     motor.FastTick();
     EXPECT_LT(motor.speed(), 1.0);
-    EXPECT_GT(motor.speed(), 0.0);
+    ASSERT_GT(motor.speed(), 0.0);
   }
-  EXPECT_LT(motor.speed(), 0.2);
+  EXPECT_LT(motor.speed(), 0.21);
 }
 
 TEST(MotorTest, DisableAfterMoving) {
