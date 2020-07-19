@@ -68,7 +68,7 @@ class AckProvider {
 
 class Reader : public AckProvider {
  public:
-  Reader(SerialInterface *arduino);
+  Reader(int name, SerialInterface *arduino);
   // Returns true if anything was read and the reader can keep reading.
   // Pending acks, lack of data, or a full read buffer will cause this to return false.
   bool Read();
@@ -77,6 +77,7 @@ class Reader : public AckProvider {
   // Returns incoming and outgoing acks.
   Ack PopIncomingAck() override;
   Ack PopOutgoingAck() override;
+  bool Initialized() const { return sequence_started_; };
 
  private:
   SerialInterface *serial_;
@@ -86,14 +87,16 @@ class Reader : public AckProvider {
   Ack incoming_ack_;
   Ack outgoing_ack_;
   bool sequence_started_;
+  const int name_;
 };
 
 class Writer {
  public:
-  Writer(const Clock &clock, SerialInterface *arduino, AckProvider *reader);
+  Writer(int name, const Clock &clock, SerialInterface *arduino, AckProvider *reader);
   // Returns false if we can't accept the packet.
   bool AddToOutgoingQueue(const unsigned char *data, const unsigned int length);
   bool Write();
+  bool Initialized() const { return sequence_started_; };
  private:
   const Clock* clock_;
   unsigned char NextIndex();
@@ -106,18 +109,21 @@ class Writer {
   unsigned char current_index_;
   unsigned long last_send_time_;
   bool sequence_started_;
+  const int name_;
 };
 
 class RxTxPair {
  public:
-  RxTxPair(const Clock &clock, SerialInterface *serial);
+  RxTxPair(int name, const Clock &clock, SerialInterface *serial);
   bool Transmit(const unsigned char *data, const unsigned char length);
   const unsigned char* Receive(unsigned char *length);
   void Tick();
+  bool Initialized() const { return reader_.Initialized() && writer_.Initialized(); }
 
  private:
   Reader reader_;
   Writer writer_;
+  const int name_;
 };
 
 }  // namespace tensixty

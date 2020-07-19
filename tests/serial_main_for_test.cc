@@ -13,7 +13,7 @@ int main(int argc, char **argv) {
   printf("Serial main running.\n");
   tensixty::FakeArduino fake_arduino;
   fake_arduino.UseFiles(argv[1], argv[2]);
-  tensixty::RxTxPair rx_tx_pair(*tensixty::GetRealClock(), &fake_arduino);
+  tensixty::RxTxPair rx_tx_pair(atoi(argv[3]), *tensixty::GetRealClock(), &fake_arduino);
   while (true) {
     rx_tx_pair.Tick();
     unsigned char length;

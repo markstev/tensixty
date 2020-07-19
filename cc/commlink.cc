@@ -4,6 +4,8 @@
 
 namespace tensixty {
 namespace {
+
+const long long kResendPeriod = 100000LL;
 unsigned char NextIndex(unsigned char index) {
   index += 1;
   return index == 128 ? 1 : index;
@@ -23,7 +25,7 @@ Packet* AllocatePacketFromArray(const int array_size, bool* live_indices, Packet
 
 void IncrementIndex(unsigned char *index) {
   *index += 1;
-  if (*index == 128) {
+  if (*index >= 128) {
     *index = 1;
   }
 }
@@ -97,25 +99,29 @@ void PacketRingBuffer::Cleanup() {
   }
 }
 
-Reader::Reader(SerialInterface *serial) {
+Reader::Reader(const int name, SerialInterface *serial)
+  : name_(name) {
   serial_ = serial;
   current_packet_ = nullptr;
   sequence_started_ = false;
 }
 
 bool Reader::Read() {
-  printf("Starting read.\n");
+  //printf("Starting read.\n");
   if (!serial_->available()) return false;
-  printf("Got bytes.\n");
+  //printf("Got bytes.\n");
   if (incoming_ack_.index() != 0) return false;
   if (outgoing_ack_.index() != 0) return false;
-  printf("No acks to flush.\n");
+  //printf("Old acks flushed okay.\n");
   if (current_packet_ == nullptr) {
     current_packet_ = buffer_.AllocatePacket();
   }
-  printf("Allocated packet.\n");
+  //printf("Allocated packet.\n");
   // No buffer space left.
-  if (current_packet_ == nullptr) return false;
+  if (current_packet_ == nullptr) {
+    printf("%d: No buffer space left.\n", name_);
+    return false;
+  }
 
   const ParseStatus status =
     current_packet_->ParseChar(serial_->read());
@@ -126,15 +132,16 @@ bool Reader::Read() {
     return true;
   }
   outgoing_ack_ = current_packet_->ack();
+  printf("%d: CC Outgoing ack: %d\n", name_, outgoing_ack_.Serialize());
   if (!sequence_started_ && !current_packet_->start_sequence()) {
     current_packet_ = nullptr;
     buffer_.Clear();
-    printf("Got bytes but not initialized yet.\n");
+    printf("%d: Got bytes but not initialized yet.\n", name_);
   } else if (current_packet_->start_sequence()) {
     incoming_ack_.AckStartSequence();
     buffer_.Clear();
     sequence_started_ = true;
-    printf("Sequence started.\n");
+    printf("%d: Reader sequence started.\n", name_);
   } else {
     if (status != PARSED) {
       incoming_ack_.Parse(true, current_packet_->index_sending());
@@ -166,7 +173,7 @@ Ack Reader::PopOutgoingAck() {
 }
 
 OutgoingPacketBuffer::OutgoingPacketBuffer() {
-  earliest_sent_index_ = 0;
+  earliest_sent_index_ = 0x80;
   for (int i = 0; i < BUFFER_SIZE; ++i) {
     live_indices_[i] = false;
     pending_indices_[i] = false;
@@ -262,6 +269,7 @@ void OutgoingPacketBuffer::RemovePacket(const unsigned char index) {
       removed = true;
     }
   }
+  printf("Removed packet %d = %d\n", index, removed);
   if (!removed) return;
   for (int i = 0; i < BUFFER_SIZE; ++i) {
     printf("Checking for misorderings.\n");
@@ -280,7 +288,7 @@ void OutgoingPacketBuffer::MarkSequenceStarted() {
 
 void OutgoingPacketBuffer::UpdateNextIndex() {
   if (!sequence_started_) {
-    earliest_sent_index_ = 0;
+    earliest_sent_index_ = 0x80;
   }
   unsigned char next_index = earliest_sent_index_;
   for (int j = 0; j < MAX_OUTGOING_INDEX_GAP; ++j) {
@@ -294,7 +302,8 @@ void OutgoingPacketBuffer::UpdateNextIndex() {
   }
 }
 
-Writer::Writer(const Clock &clock, SerialInterface *serial_interface, AckProvider *reader) {
+Writer::Writer(const int name, const Clock &clock, SerialInterface *serial_interface, AckProvider *reader)
+  : name_(name) {
   serial_interface_ = serial_interface;
   reader_ = reader;
   current_index_ = 0;
@@ -319,7 +328,7 @@ bool Writer::AddToOutgoingQueue(const unsigned char *data,
   Packet* p = buffer_.AllocatePacket();
   if (p == nullptr) return false;
   p->IncludeData(NextIndex(), data, length);
-  printf("Adding packet %d\n", p->index_sending());
+  printf("%d: Adding packet %d\n", name_, p->index_sending());
   return true;
 }
 
@@ -328,46 +337,47 @@ bool Writer::Write() {
   // 1a) handle outgoing acks
   Ack outgoing_ack = reader_->PopOutgoingAck();
   if (outgoing_ack.index() != 0) {
-    printf("Got ack for %d.\n", outgoing_ack.index());
+    printf("%d: Got ack for %d.\n", name_, outgoing_ack.index());
     if (outgoing_ack.error()) {
       buffer_.MarkResend(outgoing_ack.index());
-      printf("Mark resend %d.\n", outgoing_ack.index());
+      printf("%d: Mark resend %d.\n", name_, outgoing_ack.index());
     } else {
-      printf("Remove Sent Packet %d.\n", outgoing_ack.index());
+      printf("%d: Remove Sent Packet %d.\n", name_, outgoing_ack.index());
       buffer_.RemovePacket(outgoing_ack.index());
     }
   } else if (outgoing_ack.is_start_sequence_ack()) {
-    printf("Got ack for sequence start.\n");
+    printf("%d: Writer sequence started.\n", name_);
     sequence_started_ = true;
     buffer_.RemovePacket(0);
+    buffer_.RemovePacket(0x80);
     buffer_.MarkSequenceStarted();
   } else {
-    printf("No acks.\n");
+    //printf("No acks.\n");
   }
   // 1e) resend stalled packets after time expiration.
   unsigned long now = clock_->micros();
-  if (now - last_send_time_ > 100000LL) {
+  if (now - last_send_time_ > kResendPeriod) {
     buffer_.MarkAllResend();
     last_send_time_ = now;
   }
   // 1f) new packet, or empty packet with acks
   Packet *p = buffer_.NextPacket();
   if (p != nullptr) {
-    printf("Sending new packet from buffer\n");
+    printf("%d: Sending new packet from buffer\n", name_);
     if (p->ack().index() == 0) {
       p->IncludeAck(reader_->PopIncomingAck());
     }
-    printf("Sending next packet: %d\n", p->index_sending());
+    printf("%d: Sending next packet: %d\n", name_, p->index_sending());
     bool sent = SendBytes(*p);
     last_send_time_ = clock_->micros();
     return sent;
   } else if (p == nullptr) {
-    printf("No packets from buffer\n");
+    //printf("No packets from buffer\n");
     Ack incoming_ack = reader_->PopIncomingAck();
-    if (incoming_ack.index() != 0) {
+    if (incoming_ack.index() != 0 || incoming_ack.is_start_sequence_ack()) {
       Packet ack_only_packet;
       ack_only_packet.IncludeAck(incoming_ack);
-      printf("Sending ack-only packet.\n");
+      printf("%d: Sending ack-only packet.\n", name_);
       return SendBytes(ack_only_packet);
     }
   }
@@ -382,19 +392,19 @@ bool Writer::SendBytes(const Packet &p) {
   for (int i = 0; i < 7; ++i) {
     serial_interface_->write(header[i]);
   }
-  printf("SENDING packet %d with %d bytes acking %d error=%d \n", p.index_sending(),
-      data_length, (header[2] & 0x7f), (header[2] & 0x80) == 0x80);
+  printf("%d: SENDING packet %d with %d bytes acking %d error=%d. Writer initialized=%d \n", name_, p.index_sending(),
+      data_length, (header[2] & 0x7f), (header[2] & 0x80) == 0x80, sequence_started_);
   for (int i = 0; i < data_length; ++i) {
     serial_interface_->write(data[i]);
   }
-  if (p.index_sending() != 0) {
+  if (p.index_sending() != 0 || p.start_sequence()) {
     buffer_.MarkSent(p.index_sending());
   }
   return true;
 }
 
-RxTxPair::RxTxPair(const Clock &clock, SerialInterface *serial)
-  : reader_(serial), writer_(clock, serial, &reader_) {}
+RxTxPair::RxTxPair(const int name, const Clock &clock, SerialInterface *serial)
+  : reader_(name, serial), writer_(name, clock, serial, &reader_), name_(name) {}
 
 bool RxTxPair::Transmit(const unsigned char *data, const unsigned char length) {
   return writer_.AddToOutgoingQueue(data, length);

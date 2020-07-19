@@ -125,7 +125,7 @@ class QueueSerialConnection(SerialConnection):
 
 
 class FaultableSerialConnection(SerialConnection):
-    def __init__(self, base_connection, error_rate, seed=0, mutation_rate=1.0):
+    def __init__(self, base_connection, error_rate, seed=42, mutation_rate=1.0):
         self.base_connection = base_connection
         self.error_rate = error_rate
         self.random = Random(seed)

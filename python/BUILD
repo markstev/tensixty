@@ -80,7 +80,6 @@ py_test(
     data = [
         "//tests:serial_main_for_test",
     ],
-    timeout = "eternal",
     python_version = "PY3",
 )
 

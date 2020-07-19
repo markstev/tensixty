@@ -34,14 +34,14 @@ class Packet {
 
   // Accessors
   const Ack& ack() const { return ack_; }
-  unsigned char index_sending() const { return index_sending_ & 0x7F; }
+  unsigned char index_sending() const { return index_sending_; }
   const unsigned char *data(unsigned char *length) const;
   // True if the message is completely parsed.
   bool parsed() const { return parsed_; }
   // True if the message encountered an error while parsing.
   bool error() const { return error_; }
   // True if the message indicates a new connection.
-  bool start_sequence() const { return (index_sending_ & 0x80) == 0x80; }
+  bool start_sequence() const { return index_sending_ == 0x80; }
 
   // Builder
   void IncludeAck(const Ack &ack);

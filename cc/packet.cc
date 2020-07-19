@@ -82,7 +82,7 @@ ParseStatus Packet::ParseChar(const unsigned char c) {
   switch (status) {
     case PARSED:
       parsed_ = true;
-      printf("Parsed! Packet %d with %d bytes\n", index_sending_, data_length_);
+      printf("Parsed! Packet %d with %d bytes, ack = %d\n", index_sending_, data_length_, ack_.Serialize());
       break;
     case HEADER_ERROR:
       Reset();

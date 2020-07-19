@@ -4,7 +4,7 @@ from collections import namedtuple, deque
 from queue import Queue, Empty
 import time
 
-LOGGING_ON = False
+LOGGING_ON = True
 
 def Checksum(ints):
   first_sum = 0
@@ -75,6 +75,7 @@ class Packet(object):
                 if self.error and self.index_ack == 0:
                     self.index_ack = 0x80
                     self.error = False
+                    logging.info("Parsed ack for start sequence.")
                 self.index_sending = stream[i + 2]
                 self.data_length = stream[i + 3]
                 if data_start + self.data_length + 2 <= stream_length:
@@ -191,7 +192,17 @@ class Reader(Loggable):
             self.bytes = packet.ParseFromIntStream(self.bytes)
             if packet.Parsed():
                 self.log("Parsed")
+                if packet.error:
+                    self.log("Ack of outgoing error received for index %d",
+                            packet.index_ack)
+                    self.outgoing_error.put(packet.index_ack)
+                    self.outgoing_errors += 1
+                elif packet.index_ack:
+                    self.log("Ack of outgoing okay for index %d",
+                            packet.index_ack)
+                    self.outgoing_ok.put(packet.index_ack)
                 if packet.IsStartSequence():
+                    self.log("Reader sequence started.")
                     self.sequence_started = True
                     self.incoming_ok.put(0x80)
                     return
@@ -210,11 +221,6 @@ class Reader(Loggable):
                 else:
                     self.incoming_error.put(packet.index_sending)
                     self.incoming_errors += 1
-                if packet.error:
-                    self.outgoing_error.put(packet.index_ack)
-                    self.outgoing_errors += 1
-                else:
-                    self.outgoing_ok.put(packet.index_ack)
 
     def done(self):
         return len(self.bytes) == 0 and self.packet_lists == [[], []]
@@ -279,7 +285,8 @@ class Ack(object):
         return Ack(0x00, False)
 
     def IsStartSequence(self):
-        return self.index == 0x80
+        return (self.index == 0x80 or
+                (self.index == 0x00 and self.error))
 
     def __str__(self):
         if self.ok:
@@ -313,15 +320,28 @@ class Writer(Loggable):
         return self.all_quiet
 
     def Write(self, incoming_ack, outgoing_ack, tx_queue):
-        """Writes the incoming_ack, and either new data or a retry if any."""
-        if outgoing_ack.index != 0:
+        """Writes the incoming_ack, and either new data or a retry if any.
+
+        args:
+          incoming_ack: Ack, acknowledgement of incoming data to this device.
+            Should be sent over the wire.
+          outgoing_ack: Ack, acknowledgement of data this device sent. Used to
+            clear finished messages from the outgoing buffer.
+          tx_queue: Queue, messages we would like to transmit.
+        """
+        if outgoing_ack.IsStartSequence():
+            self.log("Write Sequence started.")
+            self.sequence_started = True
+        elif outgoing_ack.index != 0:
+            self.log("Nonzero ack, error = %d", outgoing_ack.error)
             self.all_quiet = False
             self.PopSentForAck(outgoing_ack)
-            if outgoing_ack.IsStartSequence():
-                self.sequence_started = True
         else:
+            #self.log("zero ack, error = %d", outgoing_ack.error)
             self.MaybeRetryAllSent()
         packet = Packet()
+        if incoming_ack.IsStartSequence():
+            self.log("Send ack of start sequence %d %d.", incoming_ack.index, incoming_ack.error)
         packet.WithAck(incoming_ack.index, error=incoming_ack.error)
         if self.sequence_started:
             packet_type = self.AddPacketData(tx_queue, packet)
@@ -443,7 +463,11 @@ class RXThread(Thread, Loggable):
     def ReadMessage(self, timeout):
         try:
             self.log("Reading from queue of length: %d", self.rx_queue.qsize())
-            return self.rx_queue.get(timeout=timeout).data
+            result = self.rx_queue.get(block=True, timeout=timeout).data
+            if result:
+                self.log("got result %s", result)
+                return result
+            return None
         except Empty:
             return None
 
@@ -469,7 +493,7 @@ class RXThread(Thread, Loggable):
             incoming_index_to_ack = self.reader.PopIncomingAck()
             incoming_ack = Ack(index=incoming_index_to_ack, ok=True)
         send_error_index = self.reader.PopOutgoingError()
-        if send_error_index:
+        if send_error_index is not None:
             outgoing_ack = Ack(send_error_index, ok=False)
         else:
             send_ack_index = self.reader.PopOutgoingAck()

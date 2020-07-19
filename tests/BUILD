@@ -43,7 +43,9 @@ cc_test(name = "commlink_pair_test",
             "//cc:commlink",
             "@google_googletest//:gtest",
             "@google_googletest//:gtest_main",
-        ])
+        ],
+        timeout = "short",
+        )
 
 cc_test(name = "module_dispatcher_test",
         srcs = ["module_dispatcher_test.cc"],
@@ -60,7 +62,8 @@ cc_test(name = "motor_test",
             "//cc:motor",
             "@google_googletest//:gtest",
             "@google_googletest//:gtest_main",
-        ])
+        ],
+        timeout = "short")
 
 cc_test(name = "motor_bank_module_test",
         srcs = ["motor_bank_module_test.cc"],
