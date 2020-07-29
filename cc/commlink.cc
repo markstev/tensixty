@@ -169,6 +169,7 @@ bool Reader::Read() {
       if (current_packet_->start_sequence()) {
         incoming_ack_.Parse(false, current_packet_->index_sending());
       }
+      // TODO: Could request resend on the next packet we actually need.
     }
     // Can't ack if parsed, since it may be out of order. We'll ack on pop().
   }
@@ -429,7 +430,7 @@ bool Writer::SendBytes(const Packet &p) {
 }
 
 RxTxPair::RxTxPair(const int name, const Clock &clock, SerialInterface *serial)
-  : reader_(name, serial), writer_(name, clock, serial, &reader_), name_(name) {}
+  : reader_(name, serial), writer_(name, clock, serial, &reader_) {}
 
 bool RxTxPair::Transmit(const unsigned char *data, const unsigned char length) {
   return writer_.AddToOutgoingQueue(data, length);

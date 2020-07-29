@@ -126,7 +126,6 @@ class RxTxPair {
  private:
   Reader reader_;
   Writer writer_;
-  const int name_;
 };
 
 }  // namespace tensixty
