@@ -34,7 +34,7 @@ class PacketRingBuffer {
 
 class OutgoingPacketBuffer {
  public:
-  OutgoingPacketBuffer(int name);
+  explicit OutgoingPacketBuffer(int name);
   // Allocates a packet from the buffer.
   Packet* AllocatePacket();
 

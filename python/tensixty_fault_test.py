@@ -1,77 +1,15 @@
 import unittest
 import logging
 from tensixty import TensixtyConnection
+from file_relay import FaultableFileRelay
 import time
-from threading import Thread, Semaphore
 from random import Random
 from pathlib import Path
-from queue import Queue
 
 FORMAT = '%(asctime)-15s %(message)s'
 logging.basicConfig(format=FORMAT)
 logger = logging.getLogger()
 logger.level = logging.DEBUG
-
-
-def ToInts(command):
-    return [ord(i) for i in command]
-
-
-class FaultableFileRelay(Thread):
-    def __init__(self, filename_in, filename_out, mutation_rate, add_drop_rate, seed=42):
-        Thread.__init__(self)
-        Path(filename_in).touch()
-        self.file_in = open(filename_in, 'rb+')
-        self.file_out  = open(filename_out, 'wb+')
-        self.random = Random(seed)
-        self.mutation_rate = mutation_rate
-        self.add_drop_rate = add_drop_rate
-        self.stop_queue = Queue()
-        self.daemon = True
-        self.semaphore = Semaphore()
-
-    def run(self):
-        reading = False
-        while True:
-            result = self.file_in.read(1)
-            if result == b'':
-                # Avoids EOF getting set and skipping future reads.
-                self.file_in.seek(self.file_in.tell())
-                if reading:
-                    self.semaphore.release()
-                    self.file_out.flush()
-                    reading = False
-                if not self.stop_queue.empty():
-                    return
-                continue
-            if not reading:
-                self.semaphore.acquire()
-                reading = True
-            result = self.MaybeMutate(result)
-            self.file_out.write(result)
-
-    def MaybeMutate(self, byte):
-        mutated = b''
-        if self.random.random() < self.add_drop_rate:
-            if self.random.random() < 0.5:
-                # Drop
-                return b''
-            else:
-                mutated += self.RandomByte()
-        if self.random.random() < self.mutation_rate:
-            mutated += self.RandomByte()
-        else:
-            mutated += byte
-        return mutated
-
-    def RandomByte(self):
-        return bytes([self.random.randint(0, 255)])
-
-    def StopAndJoin(self):
-        self.stop_queue.put(1)
-        self.join()
-        self.file_in.close()
-        self.file_out.close()
 
 
 class FileRelayTest(unittest.TestCase):
@@ -206,18 +144,18 @@ class TensixtyFaultTest(unittest.TestCase):
         iterations = 50
         for i in range(iterations):
             device0.SendInts([42, i, 2, 3])
-            # device1.SendInts([42, i, 0, 9, ord('\\'), 9, 0, ord('\n')])
+            device1.SendInts([42, i, 0, 9, ord('\\'), 9, 0, ord('\n')])
             start_time = time.time()
             while time.time() - start_time < 15.0:
                 if len(device1_outputs) > i:
                     self.assertEqual([i, 2, 3], device1_outputs[i])
                     break
             self.assertEqual(i + 1, len(device1_outputs))
-            #   while time.time() - start_time < 15.0:
-            #       if len(device0_outputs) > i:
-            #           self.assertEqual([i, 0, 9, ord('\\'), 9, 0, ord('\n')], device0_outputs[i])
-            #           break
-            #   self.assertEqual(i + 1, len(device0_outputs))
+            while time.time() - start_time < 15.0:
+                if len(device0_outputs) > i:
+                    self.assertEqual([i, 0, 9, ord('\\'), 9, 0, ord('\n')], device0_outputs[i])
+                    break
+            self.assertEqual(i + 1, len(device0_outputs))
 
 if __name__ == '__main__':
         unittest.main()

@@ -72,7 +72,7 @@ void Packet::Reset() {
 ParseStatus Packet::ParseChar(const unsigned char c) {
   ParseStatus status = ParseCharInternal(c);
   if (status == HEADER_ERROR || status == DATA_ERROR) {
-    printf("Reprocess %d for char %d, status %d\n", status, c, status);
+    //printf("Reprocess %d for char %d, status %d\n", status, c, status);
     const ParseStatus adjusted_status = ReProcessPacket();
     if (adjusted_status == INCOMPLETE || adjusted_status == PARSED) {
       printf("Reprocess looks good 2\n");
@@ -107,7 +107,7 @@ ParseStatus Packet::ReProcessPacket() {
   } else {
     num_bytes = data_next_byte_index_;
   }
-  printf("ReProcess: Num bytes = %d\n", num_bytes);
+  //printf("ReProcess: Num bytes = %d\n", num_bytes);
   ParseStatus status = HEADER_ERROR;
   for (unsigned int start = 1; start < num_bytes; ++start) {
     Reset();

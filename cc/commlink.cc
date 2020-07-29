@@ -166,7 +166,7 @@ bool Reader::Read() {
     } else if (!buffer_.InRange(current_packet_->index_sending())) {
       // Acks out of order packets. We already received these, but the
       // ack reply must have been corrupted.
-      incoming_ack_.Parse(false, current_packet_->index_sending());
+      incoming_ack_.Parse(/*error=*/ true, current_packet_->index_sending());
     }
     // Can't ack if parsed, since it may be out of order. We'll ack on pop().
   }
@@ -296,7 +296,6 @@ void OutgoingPacketBuffer::RemovePacket(const unsigned char index) {
   printf("%d: Removed packet %d = %d\n", name_, index, removed);
   if (!removed) return;
   for (int i = 0; i < BUFFER_SIZE; ++i) {
-    printf("%d: Checking for misorderings.\n", name_);
     if (live_indices_[i] && PrecedesIndex(buffer_[i].index_sending(), index)) {
       printf("%d: misordering found %d.\n", name_, buffer_[i].index_sending());
       pending_indices_[i] = true;

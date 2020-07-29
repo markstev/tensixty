@@ -83,10 +83,16 @@ py_test(
     python_version = "PY3",
 )
 
+py_library(
+    name = "file_relay",
+    srcs = ["file_relay.py"],
+)
+
 py_test(
     name = "tensixty_fault_test",
     srcs = ["tensixty_fault_test.py"],
     deps = [
+        ":file_relay",
         ":tensixty",
     ],
     python_version = "PY3",
