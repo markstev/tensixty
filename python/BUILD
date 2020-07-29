@@ -1,18 +1,6 @@
 package(default_visibility = ["//visibility:public"])
 
 py_library(
-    name = "hardware_abstraction",
-    srcs = ["hardware_abstraction.py"],
-)
-
-py_test(
-    name = "hardware_abstraction_test",
-    srcs = ["hardware_abstraction_test.py"],
-    deps = [":hardware_abstraction"],
-    python_version = "PY3",
-)
-
-py_library(
     name = "file_relay",
     srcs = ["file_relay.py"],
 )

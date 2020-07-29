@@ -203,8 +203,7 @@ TEST(ReaderTest, SendErrorForValidPacketBadIndex) {
   Packet *popped = reader.PopPacket();
   EXPECT_EQ(popped, nullptr);
   Ack incoming_ack = reader.PopIncomingAck();
-  EXPECT_EQ(incoming_ack.index(), 7);
-  EXPECT_EQ(incoming_ack.error(), true);
+  EXPECT_EQ(incoming_ack.index(), 0);
   EXPECT_EQ(reader.PopOutgoingAck().index(), 0x72);
 }
 

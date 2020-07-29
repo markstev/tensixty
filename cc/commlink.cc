@@ -166,7 +166,9 @@ bool Reader::Read() {
     } else if (!buffer_.InRange(current_packet_->index_sending())) {
       // Acks out of order packets. We already received these, but the
       // ack reply must have been corrupted.
-      incoming_ack_.Parse(/*error=*/ true, current_packet_->index_sending());
+      if (current_packet_->start_sequence()) {
+        incoming_ack_.Parse(false, current_packet_->index_sending());
+      }
     }
     // Can't ack if parsed, since it may be out of order. We'll ack on pop().
   }
