@@ -162,7 +162,13 @@ bool Reader::Read() {
     printf("%d: Reader sequence started.\n", name_);
   } else {
     if (status != PARSED) {
-      incoming_ack_.Parse(true, current_packet_->index_sending());
+      if (current_packet_->index_sending() != 0) {
+        // hacky -- if index is zero, then this would reset the link, which we don't want to do.
+        // But something is probably wrong with parsing to get here.
+        incoming_ack_.Parse(true, current_packet_->index_sending());
+      } else {
+        printf("WARNING: Parsed header of packet that looks broken.\n");
+      }
     } else if (!buffer_.InRange(current_packet_->index_sending())) {
       // Acks out of order packets. We already received these, but the
       // ack reply must have been corrupted.
@@ -238,7 +244,8 @@ void OutgoingPacketBuffer::MarkAllResend() {
   for (int i = 0; i < BUFFER_SIZE; ++i) {
     if (live_indices_[i]) {
       pending_indices_[i] = true;
-      printf("%d: Resend buffer[%d] = index %d.\n", name_, i, buffer_[i].index_sending());
+      printf("%d: Resend buffer[%d] = index %d. Next index = %d\n",
+          name_, i, buffer_[i].index_sending(), earliest_sent_index_);
     }
   }
 }

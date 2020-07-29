@@ -122,22 +122,22 @@ class TensixtyFaultTest(unittest.TestCase):
         device1.start()
         return device0, device1, device0_outputs, device1_outputs
 
-    #ef testTensixtyWithNoBitFlips(self):
-    #   device0, device1, device0_outputs, device1_outputs = self.createDevices(0.0, 0.0)
-    #   iterations = 5
-    #   for i in range(iterations):
-    #       device0.SendInts([42, i, 2, 3])
-    #       device1.SendInts([42, i, 0, 9, ord('\\'), 9, 0, ord('\n')])
-    #       start_time = time.time()
-    #       while time.time() - start_time < 2.5:
-    #           if len(device1_outputs) > i:
-    #               self.assertEqual([i, 2, 3], device1_outputs[i])
-    #               break
-    #       while time.time() - start_time < 2.5:
-    #           if len(device0_outputs) > i:
-    #               self.assertEqual([i, 0, 9, ord('\\'), 9, 0, ord('\n')], device0_outputs[i])
-    #               break
-    #   self.assertEqual(iterations, len(device1_outputs))
+    def testTensixtyWithNoBitFlips(self):
+        device0, device1, device0_outputs, device1_outputs = self.createDevices(0.0, 0.0)
+        iterations = 5
+        for i in range(iterations):
+            device0.SendInts([42, i, 2, 3])
+            device1.SendInts([42, i, 0, 9, ord('\\'), 9, 0, ord('\n')])
+            start_time = time.time()
+            while time.time() - start_time < 2.5:
+                if len(device1_outputs) > i:
+                    self.assertEqual([i, 2, 3], device1_outputs[i])
+                    break
+            while time.time() - start_time < 2.5:
+                if len(device0_outputs) > i:
+                    self.assertEqual([i, 0, 9, ord('\\'), 9, 0, ord('\n')], device0_outputs[i])
+                    break
+        self.assertEqual(iterations, len(device1_outputs))
 
     def testTensixtyWithBitFlips(self):
         device0, device1, device0_outputs, device1_outputs = self.createDevices(0.01, 0.0)
@@ -156,6 +156,7 @@ class TensixtyFaultTest(unittest.TestCase):
                     self.assertEqual([i, 0, 9, ord('\\'), 9, 0, ord('\n')], device0_outputs[i])
                     break
             self.assertEqual(i + 1, len(device0_outputs))
+
 
 if __name__ == '__main__':
         unittest.main()
