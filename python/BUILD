@@ -5,81 +5,10 @@ py_library(
     srcs = ["hardware_abstraction.py"],
 )
 
-py_library(
-    name = "commlink",
-    srcs = ["commlink.py"],
-    deps = [
-        ":hardware_abstraction",
-    ],
-)
-
 py_test(
     name = "hardware_abstraction_test",
     srcs = ["hardware_abstraction_test.py"],
     deps = [":hardware_abstraction"],
-    python_version = "PY3",
-)
-
-py_test(
-    name = "packet_test",
-    srcs = ["packet_test.py"],
-    deps = [":commlink",
-            ":hardware_abstraction"],
-    python_version = "PY3",
-)
-
-py_test(
-    name = "commlink_writer_test",
-    srcs = ["commlink_writer_test.py"],
-    deps = [":commlink",
-            ":hardware_abstraction"],
-    python_version = "PY3",
-)
-
-py_test(
-    name = "commlink_reader_test",
-    srcs = ["commlink_reader_test.py"],
-    deps = [":commlink",
-            ":hardware_abstraction"],
-    python_version = "PY3",
-)
-
-py_test(
-    name = "commlink_test",
-    srcs = ["commlink_test.py"],
-    deps = [":commlink",
-            ":hardware_abstraction"],
-    timeout = "short",
-    python_version = "PY3",
-)
-
-py_test(
-    name = "commlink_fault_test",
-    srcs = ["commlink_fault_test.py"],
-    deps = [":commlink",
-            ":hardware_abstraction"],
-    timeout = "eternal",
-    python_version = "PY3",
-)
-
-py_test(
-    name = "commlink_profile",
-    srcs = ["commlink_profile.py"],
-    deps = [":commlink",
-            ":hardware_abstraction"],
-    python_version = "PY3",
-)
-
-py_test(
-    name = "cc_python_integration_test",
-    srcs = ["cc_python_integration_test.py"],
-    deps = [
-        ":commlink",
-        ":hardware_abstraction",
-    ],
-    data = [
-        "//tests:serial_main_for_test",
-    ],
     python_version = "PY3",
 )
 
