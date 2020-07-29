@@ -145,7 +145,7 @@ void UpdateChecksum(const unsigned char c, unsigned char *first_sum, unsigned ch
 }
 
 ParseStatus Packet::ParseHeaderChar(const unsigned char c) {
-  printf("Parsing %d, header_index = %d\n", c, header_next_byte_index_);
+  //printf("Parsing %d, header_index = %d\n", c, header_next_byte_index_);
   bool error = false;
   switch (header_next_byte_index_) {
     case 0: {

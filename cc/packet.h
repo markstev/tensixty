@@ -1,3 +1,6 @@
+#ifndef TENSIXTY_PACKET_H_
+#define TENSIXTY_PACKET_H_
+
 namespace tensixty {
 
 enum ParseStatus {
@@ -75,3 +78,5 @@ class Packet {
 };
 
 }  // namespace tensixty
+
+#endif  // TENSIXTY_PACKET_H_

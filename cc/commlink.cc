@@ -60,7 +60,7 @@ Packet* PacketRingBuffer::PopPacket() {
       if (p.parsed() && p.index_sending() == NextIndex(last_index_number_)) {
         last_index_number_ = p.index_sending();
         live_indices_[i] = false;
-        printf("Popping\n");
+        //printf("Popping\n");
         return &buffer_[i];
       }
     }
@@ -75,25 +75,37 @@ void PacketRingBuffer::Clear() {
   last_index_number_ = 0;
 }
 
+bool PacketRingBuffer::InRange(const unsigned char index_sending) {
+  unsigned char test_index = last_index_number_;
+  for (int j = 0; j < BUFFER_SIZE; ++j) {
+    test_index = NextIndex(test_index);
+    if (test_index == index_sending) {
+      return true;
+    }
+  }
+  return false;
+}
+
 void PacketRingBuffer::Cleanup() {
+  // Note that this is only called when allocating a packet, so there shouldn't
+  // be any incomplete packets in the list.
   for (int i = 0; i < BUFFER_SIZE; ++i) {
-    if (live_indices_[i]) {
-      Packet &p = buffer_[i];
-      if (p.error()) {
-        live_indices_[i] = false;
-        continue;
-      }
-      bool in_range = false;
-      unsigned char test_index = last_index_number_;
-      for (int j = 0; j < BUFFER_SIZE; ++j) {
-        test_index = NextIndex(test_index);
-        if (test_index == p.index_sending()) {
-          in_range = true;
-          break;
-        }
-      }
-      if (!in_range) {
-        live_indices_[i] = false;
+    Packet &p = buffer_[i];
+    if (!live_indices_[i]) continue;
+    if (p.error()) {
+      live_indices_[i] = false;
+      continue;
+    }
+    if (!InRange(p.index_sending())) {
+      live_indices_[i] = false;
+      continue;
+    }
+    // Remove duplicates.
+    for (int j = i + 1; j < BUFFER_SIZE; ++j) {
+      if (live_indices_[j] && p.index_sending() == buffer_[j].index_sending()) {
+        printf("Cleanup Dropping %d\n", p.index_sending());
+        live_indices_[j] = false;
+        break;
       }
     }
   }
@@ -110,8 +122,14 @@ bool Reader::Read() {
   //printf("Starting read.\n");
   if (!serial_->available()) return false;
   //printf("Got bytes.\n");
-  if (incoming_ack_.index() != 0) return false;
-  if (outgoing_ack_.index() != 0) return false;
+  if (incoming_ack_.index() != 0) {
+    printf("%d: Reader waiting on incoming ack.\n", name_);
+    return false;
+  }
+  if (outgoing_ack_.index() != 0) {
+    printf("%d: Reader waiting on outgoing ack.\n", name_);
+    return false;
+  }
   //printf("Old acks flushed okay.\n");
   if (current_packet_ == nullptr) {
     current_packet_ = buffer_.AllocatePacket();
@@ -145,8 +163,12 @@ bool Reader::Read() {
   } else {
     if (status != PARSED) {
       incoming_ack_.Parse(true, current_packet_->index_sending());
-      // Can't ack if parsed, since it may be out of order.
+    } else if (!buffer_.InRange(current_packet_->index_sending())) {
+      // Acks out of order packets. We already received these, but the
+      // ack reply must have been corrupted.
+      incoming_ack_.Parse(false, current_packet_->index_sending());
     }
+    // Can't ack if parsed, since it may be out of order. We'll ack on pop().
   }
   current_packet_ = nullptr;
   return true;
@@ -155,6 +177,7 @@ bool Reader::Read() {
 Packet* Reader::PopPacket() {
   Packet *packet = buffer_.PopPacket();
   if (packet != nullptr) {
+    // TODO: Problem is that if we've already popped, we'll never ack a retry.
     incoming_ack_.Parse(false, packet->index_sending());
   }
   return packet;
@@ -172,13 +195,14 @@ Ack Reader::PopOutgoingAck() {
   return ack;
 }
 
-OutgoingPacketBuffer::OutgoingPacketBuffer() {
+OutgoingPacketBuffer::OutgoingPacketBuffer(int name) {
   earliest_sent_index_ = 0x80;
   for (int i = 0; i < BUFFER_SIZE; ++i) {
     live_indices_[i] = false;
     pending_indices_[i] = false;
   }
   sequence_started_ = false;
+  name_ = name;
 }
 
 Packet* OutgoingPacketBuffer::AllocatePacket() {
@@ -192,7 +216,7 @@ Packet* OutgoingPacketBuffer::AllocatePacket() {
 
 void OutgoingPacketBuffer::MarkSent(const unsigned char index) {
   for (int i = 0; i < BUFFER_SIZE; ++i) {
-    if (live_indices_[i] && buffer_[i].index_sending() == index) {
+    if (live_indices_[i] && (buffer_[i].index_sending() == index)) {
       pending_indices_[i] = false;
     }
   }
@@ -200,8 +224,8 @@ void OutgoingPacketBuffer::MarkSent(const unsigned char index) {
 
 void OutgoingPacketBuffer::MarkResend(const unsigned char index) {
   for (int i = 0; i < BUFFER_SIZE; ++i) {
-    if (live_indices_[i] && buffer_[i].index_sending() == index) {
-      printf("Found packet %d. Marking resend.\n", index);
+    if (live_indices_[i] && (buffer_[i].index_sending() == index)) {
+      printf("%d: Found packet %d. Marking resend.\n", name_, index);
       pending_indices_[i] = true;
     }
   }
@@ -211,7 +235,7 @@ void OutgoingPacketBuffer::MarkAllResend() {
   for (int i = 0; i < BUFFER_SIZE; ++i) {
     if (live_indices_[i]) {
       pending_indices_[i] = true;
-      printf("Resend buffer[%d] = index %d.\n", i, buffer_[i].index_sending());
+      printf("%d: Resend buffer[%d] = index %d.\n", name_, i, buffer_[i].index_sending());
     }
   }
 }
@@ -269,12 +293,12 @@ void OutgoingPacketBuffer::RemovePacket(const unsigned char index) {
       removed = true;
     }
   }
-  printf("Removed packet %d = %d\n", index, removed);
+  printf("%d: Removed packet %d = %d\n", name_, index, removed);
   if (!removed) return;
   for (int i = 0; i < BUFFER_SIZE; ++i) {
-    printf("Checking for misorderings.\n");
+    printf("%d: Checking for misorderings.\n", name_);
     if (live_indices_[i] && PrecedesIndex(buffer_[i].index_sending(), index)) {
-      printf("misordering found %d.\n", buffer_[i].index_sending());
+      printf("%d: misordering found %d.\n", name_, buffer_[i].index_sending());
       pending_indices_[i] = true;
     }
   }
@@ -303,7 +327,7 @@ void OutgoingPacketBuffer::UpdateNextIndex() {
 }
 
 Writer::Writer(const int name, const Clock &clock, SerialInterface *serial_interface, AckProvider *reader)
-  : name_(name) {
+  : buffer_(name), name_(name) {
   serial_interface_ = serial_interface;
   reader_ = reader;
   current_index_ = 0;

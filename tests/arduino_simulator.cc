@@ -65,7 +65,6 @@ FakeArduino::~FakeArduino() {
 void FakeArduino::write(const unsigned char c) {
   fputc(c, outgoing_file_);
   fflush(outgoing_file_);
-  printf("Wrote %d = %02X\n", c, c);
 }
 
 unsigned char FakeArduino::read() {

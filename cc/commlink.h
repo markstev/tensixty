@@ -20,6 +20,8 @@ class PacketRingBuffer {
   Packet* PopPacket();
   // Deletes all entries in the buffer.
   void Clear();
+  // Returns true if the given index is valid as an incoming packet index.
+  bool InRange(unsigned char index_sending);
  private:
   // Clears any packets left in an erroneous state as well as any packets too far
   // from the last_index_number_.
@@ -32,7 +34,7 @@ class PacketRingBuffer {
 
 class OutgoingPacketBuffer {
  public:
-  OutgoingPacketBuffer();
+  OutgoingPacketBuffer(int name);
   // Allocates a packet from the buffer.
   Packet* AllocatePacket();
 
@@ -57,6 +59,7 @@ class OutgoingPacketBuffer {
   // Makes it easier to handle indices wrapping around.
   unsigned char earliest_sent_index_;
   bool sequence_started_;
+  int name_;
 };
 
 class AckProvider {
