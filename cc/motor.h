@@ -1,7 +1,11 @@
 #ifndef COM_GITHUB_MARKSTEV_MARKBOT_MOTOR_H_
 #define COM_GITHUB_MARKSTEV_MARKBOT_MOTOR_H_
 
-#include "cc/motor_command.pb.h"
+#ifdef CMAKE_MODE
+  #include "motor_command.pb.h"
+#else
+  #include "cc/motor_command.pb.h"
+#endif
 #include <stdint.h>
 #include "arduino.h"
 

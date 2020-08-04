@@ -13,7 +13,7 @@ const unsigned char SERIAL_TYPE_PREFIX = 0x80;
 class SerialModule : public Module {
  public:
   SerialModule(const tensixty::Clock &clock,
-      tensixty::SerialInterface *serial) : rx_tx_(clock, serial) {}
+      tensixty::SerialInterface *serial) : rx_tx_(/*name=*/0, clock, serial) {}
 
   Message Tick() override;
   bool AcceptMessage(const Message &message) override;

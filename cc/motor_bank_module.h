@@ -5,7 +5,11 @@
 #include <string.h>
 
 #include "module_dispatcher.h"
-#include "cc/motor_command.pb.h"
+#ifdef CMAKE_MODE
+  #include "motor_command.pb.h"
+#else
+  #include "cc/motor_command.pb.h"
+#endif
 #include "motor.h"
 
 namespace markbot {
